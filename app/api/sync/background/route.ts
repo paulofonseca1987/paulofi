@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createEventFetchingClient, createArchiveClient, fetchDelegationEvents, getCurrentBlockNumber, getTokenCreationBlock } from '@/lib/blockchain';
 import {
-  getVotingPowerData,
   acquireSyncLock,
   releaseSyncLock,
   getMetadata,
@@ -16,7 +15,7 @@ import {
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import type { Address } from 'viem';
-import type { VotingPowerData, TimelineEntry, DelegationEvent, MetadataSchema, CurrentStateSchema } from '@/lib/types';
+import type { TimelineEntry, DelegationEvent, MetadataSchema, CurrentStateSchema } from '@/lib/types';
 
 function getConfig() {
   try {
@@ -50,14 +49,12 @@ async function processEvents(
     if (event.eventType === 'DELEGATE_CHANGED') {
       // Handle delegation relationship changes
       if (toLower === delegateAddrLower) {
-        // Someone is delegating TO our delegate
         if (event.newBalance > 0n) {
           delegators[fromLower] = event.newBalance;
         } else {
           delete delegators[fromLower];
         }
       } else if (fromLower === delegateAddrLower) {
-        // Someone is delegating FROM our delegate to someone else
         for (const [addr, balance] of Object.entries(delegators)) {
           if (balance === event.previousBalance) {
             delete delegators[addr];
@@ -65,7 +62,6 @@ async function processEvents(
           }
         }
       } else {
-        // Delegator changing their delegation away from us
         if (delegators[fromLower] !== undefined) {
           delete delegators[fromLower];
         }
@@ -81,16 +77,14 @@ async function processEvents(
         if (newBalance > 0n) {
           delegators[delegatorAddr] = newBalance;
         } else {
-          // Balance went to zero
           delete delegators[delegatorAddr];
         }
 
         // Only create timeline entry if balance actually changed
         if (oldBalance === newBalance) {
-          continue; // Skip timeline entry if no change
+          continue;
         }
       } else {
-        // Delegator not in our list, skip
         continue;
       }
     }
@@ -121,13 +115,20 @@ async function processEvents(
 }
 
 export async function POST(request: NextRequest) {
+  // Validate sync token
+  const token = request.headers.get('X-Sync-Token');
+  const syncSecret = process.env.SYNC_SECRET || 'default-secret';
+
+  if (token !== syncSecret) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   // Acquire sync lock
   const lockAcquired = await acquireSyncLock();
   if (!lockAcquired) {
-    return NextResponse.json(
-      { error: 'Sync already in progress' },
-      { status: 409 }
-    );
+    return NextResponse.json({
+      message: 'Sync already in progress'
+    });
   }
 
   try {
@@ -156,36 +157,27 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Fetch and save events incrementally every 1M blocks
-    const chunkSize = 10000n; // Process 10k blocks at a time (free RPCs support large ranges)
-    const saveInterval = 1000000n; // Save data every 1M blocks
-
+    // Fetch events in chunks to avoid rate limits
+    const chunkSize = 10000n; // Free RPCs support large block ranges
+    let allEvents: DelegationEvent[] = [];
     let currentFrom = fromBlock;
-    let lastSaveBlock = fromBlock;
-    let accumulatedEvents: DelegationEvent[] = [];
     let totalEventsProcessed = 0;
 
     const totalBlocks = Number(toBlock - fromBlock);
     const syncStartTime = Date.now();
 
-    // Initialize delegators state from existing data
-    let delegatorsState: Record<string, bigint> = {};
-    if (currentState) {
-      for (const [addr, balance] of Object.entries(currentState.delegators)) {
-        delegatorsState[addr.toLowerCase()] = BigInt(balance);
-      }
-    }
+    // Track delegators across chunks for balance change tracking
+    let delegatorsForTracking: string[] = [];
 
-    let totalTimelineEntries = metadata?.totalTimelineEntries || 0;
+    // Initialize from existing state if available
+    if (currentState) {
+      delegatorsForTracking = Object.keys(currentState.delegators);
+    }
 
     while (currentFrom <= toBlock) {
       const currentTo = currentFrom + chunkSize > toBlock ? toBlock : currentFrom + chunkSize;
 
-      console.log(`Fetching events from block ${currentFrom} to ${currentTo}`);
-
-      // Extract current delegator addresses for balance change tracking
-      const currentDelegatorAddrs = Object.keys(delegatorsState);
-
+      console.log(`[Background Sync] Fetching events from block ${currentFrom} to ${currentTo}`);
       const events = await fetchDelegationEvents(
         eventClient,
         archiveClient,
@@ -193,69 +185,28 @@ export async function POST(request: NextRequest) {
         delegateAddress,
         currentFrom,
         currentTo,
-        currentDelegatorAddrs
+        delegatorsForTracking
       );
 
-      accumulatedEvents.push(...events);
-
-      // Check if we should save (every 10M blocks or at the end)
-      const shouldSave = (currentTo - lastSaveBlock >= saveInterval) || currentTo >= toBlock;
-
-      if (shouldSave && accumulatedEvents.length > 0) {
-        console.log(`Saving data at block ${currentTo} (${accumulatedEvents.length} events)`);
-
-        // Process accumulated events
-        const { timeline: newTimelineEntries, currentDelegators } = await processEvents(
-          accumulatedEvents,
-          delegateAddress,
-          delegatorsState
-        );
-
-        // Update delegators state for next batch
-        delegatorsState = {};
-        for (const [addr, balance] of Object.entries(currentDelegators)) {
-          delegatorsState[addr] = BigInt(balance);
+      // Update delegators list for next chunk
+      // Extract new delegators from delegation events
+      for (const event of events) {
+        if (event.eventType === 'DELEGATE_CHANGED') {
+          const delegator = event.from.toLowerCase();
+          if (event.to.toLowerCase() === delegateAddress.toLowerCase()) {
+            // New delegation
+            if (!delegatorsForTracking.includes(delegator)) {
+              delegatorsForTracking.push(delegator);
+            }
+          } else if (event.from.toLowerCase() === delegateAddress.toLowerCase()) {
+            // Undelegation
+            delegatorsForTracking = delegatorsForTracking.filter(addr => addr !== delegator);
+          }
         }
-
-        // Calculate total voting power
-        let totalVotingPower = BigInt(0);
-        for (const balance of Object.values(currentDelegators)) {
-          totalVotingPower += BigInt(balance);
-        }
-
-        totalTimelineEntries += newTimelineEntries.length;
-
-        // Store updated data
-        const newMetadata: MetadataSchema = {
-          lastSyncedBlock: Number(currentTo),
-          lastSyncTimestamp: Date.now(),
-          totalVotingPower: totalVotingPower.toString(),
-          totalDelegators: Object.keys(currentDelegators).length,
-          totalTimelineEntries,
-          timelinePartitions: Math.ceil(totalTimelineEntries / 1000)
-        };
-
-        const newCurrentState: CurrentStateSchema = {
-          asOfBlock: Number(currentTo),
-          asOfTimestamp: Date.now(),
-          delegators: currentDelegators
-        };
-
-        await storeMetadata(newMetadata);
-        await storeCurrentState(newCurrentState);
-
-        if (newTimelineEntries.length > 0) {
-          await appendTimelineEntries(newTimelineEntries);
-        }
-
-        // Clear cache and reset for next batch
-        clearCache();
-        accumulatedEvents = [];
-        lastSaveBlock = currentTo;
-        totalEventsProcessed += events.length;
-
-        console.log(`Saved data at block ${currentTo}, total events: ${totalEventsProcessed}`);
       }
+
+      allEvents.push(...events);
+      totalEventsProcessed += events.length;
 
       // Update progress
       const blocksProcessed = Number(currentFrom - fromBlock);
@@ -277,30 +228,71 @@ export async function POST(request: NextRequest) {
 
       currentFrom = currentTo + 1n;
 
-      // Small delay to avoid rate limits
       await new Promise((resolve) => setTimeout(resolve, 10));
     }
 
-    console.log(`Sync completed: ${totalEventsProcessed} total events processed`);
+    console.log(`[Background Sync] Fetched ${allEvents.length} delegation events`);
 
-    // Clear progress and release lock
+    // If we have existing data, start with the last known state
+    let initialDelegators: Record<string, bigint> = {};
+
+    if (currentState) {
+      for (const [addr, balance] of Object.entries(currentState.delegators)) {
+        initialDelegators[addr.toLowerCase()] = BigInt(balance);
+      }
+    }
+
+    // Process events
+    const { timeline: newTimelineEntries, currentDelegators } = await processEvents(
+      allEvents,
+      delegateAddress,
+      initialDelegators
+    );
+
+    // Calculate total voting power
+    let totalVotingPower = BigInt(0);
+    for (const balance of Object.values(currentDelegators)) {
+      totalVotingPower += BigInt(balance);
+    }
+
+    // Store updated data
+    const newMetadata: MetadataSchema = {
+      lastSyncedBlock: Number(toBlock),
+      lastSyncTimestamp: Date.now(),
+      totalVotingPower: totalVotingPower.toString(),
+      totalDelegators: Object.keys(currentDelegators).length,
+      totalTimelineEntries: (metadata?.totalTimelineEntries || 0) + newTimelineEntries.length,
+      timelinePartitions: Math.ceil(((metadata?.totalTimelineEntries || 0) + newTimelineEntries.length) / 1000)
+    };
+
+    const newCurrentState: CurrentStateSchema = {
+      asOfBlock: Number(toBlock),
+      asOfTimestamp: Date.now(),
+      delegators: currentDelegators
+    };
+
+    await storeMetadata(newMetadata);
+    await storeCurrentState(newCurrentState);
+
+    if (newTimelineEntries.length > 0) {
+      await appendTimelineEntries(newTimelineEntries);
+    }
+
+    clearCache();
     await clearSyncProgress();
     await releaseSyncLock();
 
-    // Get final metadata for response
-    const finalMetadata = await getMetadata();
-    const finalState = await getCurrentState();
+    console.log(`[Background Sync] Sync completed successfully`);
 
     return NextResponse.json({
-      message: 'Sync completed',
-      eventsProcessed: totalEventsProcessed,
+      message: 'Background sync completed',
+      eventsProcessed: allEvents.length,
       lastSyncedBlock: Number(toBlock),
-      timelineEntries: finalMetadata?.totalTimelineEntries || 0,
-      currentDelegators: finalState ? Object.keys(finalState.delegators).length : 0,
+      timelineEntries: newMetadata.totalTimelineEntries,
+      currentDelegators: Object.keys(currentDelegators).length,
     });
   } catch (error: any) {
-    console.error('Sync error:', error);
-    // Clear progress and release lock on error
+    console.error('[Background Sync] Error:', error);
     await clearSyncProgress();
     await releaseSyncLock();
     return NextResponse.json(
@@ -309,4 +301,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

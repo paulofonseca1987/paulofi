@@ -71,7 +71,10 @@ export default function TimelineChart({ timeline }: TimelineChartProps) {
           <p className="font-semibold mb-2">{payload[0].payload.date}</p>
           <p className="text-sm text-gray-600 mb-1">Block: {payload[0].payload.blockNumber}</p>
           <p className="text-sm font-medium mb-2">
-            Total: {payload[0].payload.total.toLocaleString(undefined, { maximumFractionDigits: 2 })} ARB
+            Total: {payload[0].payload.total.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2
+            })} ARB
           </p>
           <div className="space-y-1">
             {delegatorList.map((addr, idx) => {
@@ -83,7 +86,10 @@ export default function TimelineChart({ timeline }: TimelineChartProps) {
                     className="inline-block w-3 h-3 rounded mr-2"
                     style={{ backgroundColor: colors[idx % colors.length] }}
                   />
-                  {addr.slice(0, 6)}...{addr.slice(-4)}: {value.toLocaleString(undefined, { maximumFractionDigits: 2 })} ARB
+                  {addr.slice(0, 6)}...{addr.slice(-4)}: {value.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                  })} ARB
                 </p>
               );
             })}

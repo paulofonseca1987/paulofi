@@ -35,7 +35,10 @@ export default function DelegatorsList({ delegators }: DelegatorsListProps) {
 
   const formatBalance = (balance: bigint) => {
     const arb = Number(balance) / 1e18;
-    return arb.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    return arb.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
   };
 
   const getPercentage = (balance: bigint) => {
