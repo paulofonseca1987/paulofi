@@ -79,3 +79,16 @@ export interface SyncProgress {
   startedAt: number;
 }
 
+export interface VerificationResult {
+  verified: number;
+  discrepancies: Array<{
+    address: string;
+    stored: string;
+    actual: string;
+    difference: string;
+  }>;
+  failed: number;
+  timestamp: number;
+  verifiedAtBlock: number;
+}
+

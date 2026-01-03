@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createEventFetchingClient, createArchiveClient, fetchDelegationEvents, getCurrentBlockNumber, getTokenCreationBlock } from '@/lib/blockchain';
+import { createEventFetchingClient, createArchiveClient, fetchDelegationEvents, fetchTransferEvents, getCurrentBlockNumber, getTokenCreationBlock } from '@/lib/blockchain';
 import {
   getVotingPowerData,
   acquireSyncLock,
@@ -42,74 +42,85 @@ async function processEvents(
   const delegators: Record<string, bigint> = { ...initialDelegators };
   const timeline: TimelineEntry[] = [];
 
+  // Group events by block number to merge events in the same block
+  const eventsByBlock = new Map<number, DelegationEvent[]>();
   for (const event of events) {
-    const delegateAddrLower = delegateAddress.toLowerCase();
-    const fromLower = event.from.toLowerCase();
-    const toLower = event.to.toLowerCase();
+    const blockEvents = eventsByBlock.get(event.blockNumber) || [];
+    blockEvents.push(event);
+    eventsByBlock.set(event.blockNumber, blockEvents);
+  }
 
-    if (event.eventType === 'DELEGATE_CHANGED') {
-      // Handle delegation relationship changes
-      if (toLower === delegateAddrLower) {
-        // Someone is delegating TO our delegate
-        if (event.newBalance > 0n) {
+  // Process each block's events and create one timeline entry per block
+  const sortedBlocks = Array.from(eventsByBlock.keys()).sort((a, b) => a - b);
+
+  for (const blockNumber of sortedBlocks) {
+    const blockEvents = eventsByBlock.get(blockNumber)!;
+    let stateChanged = false;
+
+    // Process all events in this block
+    for (const event of blockEvents) {
+      const delegateAddrLower = delegateAddress.toLowerCase();
+      const fromLower = event.from.toLowerCase();
+      const toLower = event.to.toLowerCase();
+
+      if (event.eventType === 'DELEGATE_CHANGED') {
+        // Handle delegation relationship changes
+        if (toLower === delegateAddrLower) {
+          // Someone is delegating TO our delegate
+          // Keep them even if balance is 0 (they're still delegating)
           delegators[fromLower] = event.newBalance;
+          stateChanged = true;
+        } else if (fromLower === delegateAddrLower) {
+          // Someone is delegating FROM our delegate to someone else
+          for (const [addr, balance] of Object.entries(delegators)) {
+            if (balance === event.previousBalance) {
+              delete delegators[addr];
+              stateChanged = true;
+              break;
+            }
+          }
         } else {
-          delete delegators[fromLower];
-        }
-      } else if (fromLower === delegateAddrLower) {
-        // Someone is delegating FROM our delegate to someone else
-        for (const [addr, balance] of Object.entries(delegators)) {
-          if (balance === event.previousBalance) {
-            delete delegators[addr];
-            break;
+          // Delegator changing their delegation away from us
+          if (delegators[fromLower] !== undefined) {
+            delete delegators[fromLower];
+            stateChanged = true;
           }
         }
-      } else {
-        // Delegator changing their delegation away from us
-        if (delegators[fromLower] !== undefined) {
-          delete delegators[fromLower];
-        }
-      }
-    } else if (event.eventType === 'BALANCE_CHANGED') {
-      // Handle balance changes without delegation changes
-      const delegatorAddr = event.delegator!.toLowerCase();
+      } else if (event.eventType === 'BALANCE_CHANGED') {
+        // Handle balance changes without delegation changes
+        const delegatorAddr = event.delegator!.toLowerCase();
 
-      if (delegators[delegatorAddr] !== undefined) {
-        const oldBalance = delegators[delegatorAddr];
-        const newBalance = event.newBalance;
+        if (delegators[delegatorAddr] !== undefined) {
+          const oldBalance = delegators[delegatorAddr];
+          const newBalance = event.newBalance;
 
-        if (newBalance > 0n) {
+          // Keep delegator even if balance goes to 0 (they're still delegating to us)
           delegators[delegatorAddr] = newBalance;
-        } else {
-          // Balance went to zero
-          delete delegators[delegatorAddr];
-        }
 
-        // Only create timeline entry if balance actually changed
-        if (oldBalance === newBalance) {
-          continue; // Skip timeline entry if no change
+          // Mark state as changed if balance actually changed
+          if (oldBalance !== newBalance) {
+            stateChanged = true;
+          }
         }
-      } else {
-        // Delegator not in our list, skip
-        continue;
       }
     }
 
-    // Calculate total voting power
-    const totalVotingPower = Object.values(delegators).reduce(
-      (sum, balance) => sum + balance,
-      0n
-    );
+    // Create one timeline entry for this block if state changed
+    if (stateChanged) {
+      const totalVotingPower = Object.values(delegators).reduce(
+        (sum, balance) => sum + balance,
+        0n
+      );
 
-    // Create timeline entry
-    timeline.push({
-      timestamp: event.timestamp,
-      blockNumber: event.blockNumber,
-      totalVotingPower: totalVotingPower.toString(),
-      delegators: Object.fromEntries(
-        Object.entries(delegators).map(([addr, balance]) => [addr, balance.toString()])
-      ),
-    });
+      timeline.push({
+        timestamp: blockEvents[0].timestamp, // All events in same block have same timestamp
+        blockNumber: blockNumber,
+        totalVotingPower: totalVotingPower.toString(),
+        delegators: Object.fromEntries(
+          Object.entries(delegators).map(([addr, balance]) => [addr, balance.toString()])
+        ),
+      });
+    }
   }
 
   // Convert current delegators to strings
@@ -178,6 +189,9 @@ export async function POST(request: NextRequest) {
 
     let totalTimelineEntries = metadata?.totalTimelineEntries || 0;
 
+    // Save initial state for timeline processing
+    let checkpointStartState: Record<string, bigint> = { ...delegatorsState };
+
     while (currentFrom <= toBlock) {
       const currentTo = currentFrom + chunkSize > toBlock ? toBlock : currentFrom + chunkSize;
 
@@ -186,7 +200,8 @@ export async function POST(request: NextRequest) {
       // Extract current delegator addresses for balance change tracking
       const currentDelegatorAddrs = Object.keys(delegatorsState);
 
-      const events = await fetchDelegationEvents(
+      // Fetch delegation events (DelegateChanged + DelegateVotesChanged)
+      const delegationEvents = await fetchDelegationEvents(
         eventClient,
         archiveClient,
         tokenAddress,
@@ -196,25 +211,80 @@ export async function POST(request: NextRequest) {
         currentDelegatorAddrs
       );
 
+      // Fetch Transfer events for current delegators to track all balance changes
+      const transferEvents = await fetchTransferEvents(
+        eventClient,
+        archiveClient,
+        tokenAddress,
+        delegateAddress,
+        currentDelegatorAddrs,
+        currentFrom,
+        currentTo
+      );
+
+      // Merge and deduplicate events (delegation events take priority)
+      const events = [...delegationEvents, ...transferEvents].sort((a, b) => {
+        if (a.blockNumber !== b.blockNumber) {
+          return a.blockNumber - b.blockNumber;
+        }
+        return a.timestamp - b.timestamp;
+      });
+
       accumulatedEvents.push(...events);
 
-      // Check if we should save (every 10M blocks or at the end)
+      // Update delegatorsState after each chunk to track who is currently delegating
+      // This ensures we stop fetching Transfer events for addresses that undelegate
+      // We only update the delegator list here, NOT create timeline entries
+      if (events.length > 0) {
+        for (const event of events) {
+          const delegateAddrLower = delegateAddress.toLowerCase();
+          const fromLower = event.from.toLowerCase();
+          const toLower = event.to.toLowerCase();
+
+          if (event.eventType === 'DELEGATE_CHANGED') {
+            if (toLower === delegateAddrLower) {
+              delegatorsState[fromLower] = event.newBalance;
+            } else if (delegatorsState[fromLower] !== undefined) {
+              delete delegatorsState[fromLower];
+            }
+          } else if (event.eventType === 'BALANCE_CHANGED') {
+            const delegatorAddr = event.delegator!.toLowerCase();
+            if (delegatorsState[delegatorAddr] !== undefined) {
+              delegatorsState[delegatorAddr] = event.newBalance;
+            }
+          }
+        }
+      }
+
+      // Check if we should save (every 1M blocks or at the end)
       const shouldSave = (currentTo - lastSaveBlock >= saveInterval) || currentTo >= toBlock;
 
-      if (shouldSave && accumulatedEvents.length > 0) {
-        console.log(`Saving data at block ${currentTo} (${accumulatedEvents.length} events)`);
+      if (shouldSave) {
+        console.log(`[Checkpoint] Reached at block ${currentTo}, processing ${accumulatedEvents.length} accumulated events...`);
 
-        // Process accumulated events
-        const { timeline: newTimelineEntries, currentDelegators } = await processEvents(
-          accumulatedEvents,
-          delegateAddress,
-          delegatorsState
-        );
+        // Process accumulated events (even if empty, to maintain state)
+        let newTimelineEntries: TimelineEntry[] = [];
+        let currentDelegators: Record<string, string> = {};
 
-        // Update delegators state for next batch
-        delegatorsState = {};
-        for (const [addr, balance] of Object.entries(currentDelegators)) {
-          delegatorsState[addr] = BigInt(balance);
+        if (accumulatedEvents.length > 0) {
+          const result = await processEvents(
+            accumulatedEvents,
+            delegateAddress,
+            checkpointStartState  // Use state from START of checkpoint interval
+          );
+          newTimelineEntries = result.timeline;
+          currentDelegators = result.currentDelegators;
+
+          // Update delegators state
+          delegatorsState = {};
+          for (const [addr, balance] of Object.entries(currentDelegators)) {
+            delegatorsState[addr] = BigInt(balance);
+          }
+        } else {
+          // No events, use current state
+          currentDelegators = Object.fromEntries(
+            Object.entries(delegatorsState).map(([addr, balance]) => [addr, balance.toString()])
+          );
         }
 
         // Calculate total voting power
@@ -248,13 +318,22 @@ export async function POST(request: NextRequest) {
           await appendTimelineEntries(newTimelineEntries);
         }
 
+        // Update total events counter BEFORE clearing accumulated events
+        totalEventsProcessed += accumulatedEvents.length;
+
         // Clear cache and reset for next batch
         clearCache();
         accumulatedEvents = [];
         lastSaveBlock = currentTo;
-        totalEventsProcessed += events.length;
 
-        console.log(`Saved data at block ${currentTo}, total events: ${totalEventsProcessed}`);
+        // Reset checkpoint start state for next interval
+        checkpointStartState = { ...delegatorsState };
+
+        console.log(`[Checkpoint] Saved at block ${currentTo}:`);
+        console.log(`  - Events processed: ${totalEventsProcessed}`);
+        console.log(`  - Timeline entries: ${newTimelineEntries.length}`);
+        console.log(`  - Total delegators: ${Object.keys(currentDelegators).length}`);
+        console.log(`  - Total voting power: ${(Number(totalVotingPower) / 1e18).toFixed(2)} ARB`);
       }
 
       // Update progress
@@ -277,8 +356,8 @@ export async function POST(request: NextRequest) {
 
       currentFrom = currentTo + 1n;
 
-      // Small delay to avoid rate limits
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      // Delay to avoid rate limits (increased to reduce 429 errors)
+      await new Promise((resolve) => setTimeout(resolve, 500));
     }
 
     console.log(`Sync completed: ${totalEventsProcessed} total events processed`);

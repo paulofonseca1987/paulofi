@@ -350,7 +350,7 @@ export default function Home() {
 
             {/* Delegators List */}
             <div className="mb-8">
-              <DelegatorsList delegators={currentState.delegators} />
+              <DelegatorsList delegators={currentState.delegators} timeline={timeline} />
             </div>
 
             {/* Metadata Info */}

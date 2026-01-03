@@ -1,29 +1,93 @@
 'use client';
 
-import type { VotingPowerData } from '@/lib/types';
+import { useState } from 'react';
+import type { TimelineEntry } from '@/lib/types';
 
 interface DelegatorsListProps {
   delegators: Record<string, string>;
+  timeline: TimelineEntry[];
 }
 
-export default function DelegatorsList({ delegators }: DelegatorsListProps) {
-  const delegatorEntries = Object.entries(delegators)
-    .map(([address, balance]) => ({
-      address,
-      balance: BigInt(balance),
-    }))
+interface DelegatorInfo {
+  address: string;
+  dateStart: number | null;
+  dateEnd: number | null;
+  currentBalance: bigint;
+}
+
+export default function DelegatorsList({ delegators, timeline }: DelegatorsListProps) {
+  const [sortColumn, setSortColumn] = useState<'dateStart' | 'currentBalance'>('currentBalance');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+
+  // Process timeline to get all delegators (past and current) with dates
+  const allDelegators = new Map<string, DelegatorInfo>();
+
+  // Extract all unique delegators from timeline
+  timeline.forEach((entry) => {
+    Object.keys(entry.delegators).forEach((address) => {
+      const addrLower = address.toLowerCase();
+      if (!allDelegators.has(addrLower)) {
+        allDelegators.set(addrLower, {
+          address: addrLower,
+          dateStart: entry.timestamp,
+          dateEnd: null,
+          currentBalance: 0n,
+        });
+      }
+    });
+  });
+
+  // Update with current balances and determine end dates
+  allDelegators.forEach((info, address) => {
+    const currentBalance = delegators[address];
+    if (currentBalance) {
+      // Still delegating
+      info.currentBalance = BigInt(currentBalance);
+      info.dateEnd = null;
+    } else {
+      // No longer delegating - find last appearance in timeline
+      for (let i = timeline.length - 1; i >= 0; i--) {
+        if (timeline[i].delegators[address]) {
+          info.dateEnd = timeline[i].timestamp;
+          break;
+        }
+      }
+      info.currentBalance = 0n;
+    }
+  });
+
+  const delegatorEntries = Array.from(allDelegators.values())
     .sort((a, b) => {
-      if (b.balance > a.balance) return 1;
-      if (b.balance < a.balance) return -1;
-      return 0;
+      let comparison = 0;
+
+      if (sortColumn === 'currentBalance') {
+        // Sort by current balance
+        if (b.currentBalance > a.currentBalance) comparison = 1;
+        else if (b.currentBalance < a.currentBalance) comparison = -1;
+      } else if (sortColumn === 'dateStart') {
+        // Sort by start date
+        const dateA = a.dateStart || 0;
+        const dateB = b.dateStart || 0;
+        comparison = dateA - dateB;
+      }
+
+      // Reverse if descending
+      if (sortDirection === 'desc') comparison = -comparison;
+
+      // Secondary sort by address if primary is equal
+      if (comparison === 0) {
+        comparison = a.address.localeCompare(b.address);
+      }
+
+      return comparison;
     });
 
-  const totalBalance = delegatorEntries.reduce((sum, d) => sum + d.balance, 0n);
+  const totalBalance = delegatorEntries.reduce((sum, d) => sum + d.currentBalance, 0n);
 
   if (delegatorEntries.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold mb-4">Current Delegators</h2>
+        <h2 className="text-xl font-semibold mb-4">Delegates</h2>
         <p className="text-gray-500">No delegators found</p>
       </div>
     );
@@ -41,16 +105,69 @@ export default function DelegatorsList({ delegators }: DelegatorsListProps) {
     });
   };
 
+  const formatDate = (timestamp: number | null) => {
+    if (!timestamp) return '-';
+    return new Date(timestamp * 1000).toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const formatDelegationPeriod = (dateStart: number | null, dateEnd: number | null) => {
+    if (!dateStart) return '-';
+    const startDate = formatDate(dateStart);
+
+    if (!dateEnd) {
+      // Still active
+      return `${startDate} until Today`;
+    } else {
+      // No longer active
+      const endDate = formatDate(dateEnd);
+      return `${startDate} until ${endDate}`;
+    }
+  };
+
   const getPercentage = (balance: bigint) => {
     if (totalBalance === 0n) return 0;
     return (Number(balance) / Number(totalBalance)) * 100;
   };
 
+  const handleSort = (column: 'dateStart' | 'currentBalance') => {
+    if (sortColumn === column) {
+      // Toggle direction if same column
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // New column, default to descending
+      setSortColumn(column);
+      setSortDirection('desc');
+    }
+  };
+
+  const SortIcon = ({ column }: { column: 'dateStart' | 'currentBalance' }) => {
+    if (sortColumn !== column) {
+      return (
+        <svg className="w-4 h-4 ml-1 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+        </svg>
+      );
+    }
+    return sortDirection === 'asc' ? (
+      <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+      </svg>
+    ) : (
+      <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+      </svg>
+    );
+  };
+
   return (
     <div className="bg-white rounded-lg shadow p-6">
-      <h2 className="text-xl font-semibold mb-4">Current Delegators</h2>
+      <h2 className="text-xl font-semibold mb-4">Delegates</h2>
       <div className="mb-4 text-sm text-gray-600">
-        Total Voting Power: {formatBalance(totalBalance)} ARB
+        Total Current Voting Power: {formatBalance(totalBalance)} ARB
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
@@ -59,22 +176,37 @@ export default function DelegatorsList({ delegators }: DelegatorsListProps) {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Address
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Delegated Amount
+              <th
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                onClick={() => handleSort('dateStart')}
+              >
+                <div className="flex items-center">
+                  Delegation Period
+                  <SortIcon column="dateStart" />
+                </div>
+              </th>
+              <th
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                onClick={() => handleSort('currentBalance')}
+              >
+                <div className="flex items-center">
+                  Amount Currently Delegated
+                  <SortIcon column="currentBalance" />
+                </div>
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Percentage
+                Current %
               </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {delegatorEntries.map(({ address, balance }) => (
-              <tr key={address} className="hover:bg-gray-50">
+            {delegatorEntries.map((info) => (
+              <tr key={info.address} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
-                    <span className="font-mono text-sm">{formatAddress(address)}</span>
+                    <span className="font-mono text-sm">{formatAddress(info.address)}</span>
                     <button
-                      onClick={() => navigator.clipboard.writeText(address)}
+                      onClick={() => navigator.clipboard.writeText(info.address)}
                       className="ml-2 text-gray-400 hover:text-gray-600"
                       title="Copy address"
                     >
@@ -94,19 +226,22 @@ export default function DelegatorsList({ delegators }: DelegatorsListProps) {
                     </button>
                   </div>
                 </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {formatDelegationPeriod(info.dateStart, info.dateEnd)}
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  {formatBalance(balance)} ARB
+                  {formatBalance(info.currentBalance)} ARB
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
                     <div className="w-32 bg-gray-200 rounded-full h-2 mr-2">
                       <div
                         className="bg-blue-600 h-2 rounded-full"
-                        style={{ width: `${getPercentage(balance)}%` }}
+                        style={{ width: `${getPercentage(info.currentBalance)}%` }}
                       />
                     </div>
                     <span className="text-sm text-gray-600">
-                      {getPercentage(balance).toFixed(2)}%
+                      {getPercentage(info.currentBalance).toFixed(2)}%
                     </span>
                   </div>
                 </td>
