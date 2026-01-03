@@ -62,8 +62,8 @@ export default function DelegatorsList({ delegators, timeline }: DelegatorsListP
 
       if (sortColumn === 'currentBalance') {
         // Sort by current balance
-        if (b.currentBalance > a.currentBalance) comparison = 1;
-        else if (b.currentBalance < a.currentBalance) comparison = -1;
+        if (a.currentBalance > b.currentBalance) comparison = 1;
+        else if (a.currentBalance < b.currentBalance) comparison = -1;
       } else if (sortColumn === 'dateStart') {
         // Sort by start date
         const dateA = a.dateStart || 0;
@@ -166,9 +166,6 @@ export default function DelegatorsList({ delegators, timeline }: DelegatorsListP
   return (
     <div className="bg-white rounded-lg shadow p-6">
       <h2 className="text-xl font-semibold mb-4">Delegates</h2>
-      <div className="mb-4 text-sm text-gray-600">
-        Total Current Voting Power: {formatBalance(totalBalance)} ARB
-      </div>
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -201,7 +198,11 @@ export default function DelegatorsList({ delegators, timeline }: DelegatorsListP
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {delegatorEntries.map((info) => (
-              <tr key={info.address} className="hover:bg-gray-50">
+              <tr
+                key={info.address}
+                className="hover:bg-gray-50"
+                style={{ opacity: info.currentBalance === 0n ? 0.5 : 1 }}
+              >
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
                     <span className="font-mono text-sm">{formatAddress(info.address)}</span>
@@ -233,17 +234,21 @@ export default function DelegatorsList({ delegators, timeline }: DelegatorsListP
                   {formatBalance(info.currentBalance)} ARB
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="w-32 bg-gray-200 rounded-full h-2 mr-2">
-                      <div
-                        className="bg-blue-600 h-2 rounded-full"
-                        style={{ width: `${getPercentage(info.currentBalance)}%` }}
-                      />
+                  {info.currentBalance === 0n ? (
+                    <span className="text-sm text-gray-500">No Delegation</span>
+                  ) : (
+                    <div className="flex items-center">
+                      <div className="w-32 bg-gray-200 rounded-full h-2 mr-2">
+                        <div
+                          className="bg-blue-600 h-2 rounded-full"
+                          style={{ width: `${getPercentage(info.currentBalance)}%` }}
+                        />
+                      </div>
+                      <span className="text-sm text-gray-600">
+                        {getPercentage(info.currentBalance).toFixed(2)}%
+                      </span>
                     </div>
-                    <span className="text-sm text-gray-600">
-                      {getPercentage(info.currentBalance).toFixed(2)}%
-                    </span>
-                  </div>
+                  )}
                 </td>
               </tr>
             ))}

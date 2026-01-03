@@ -35,6 +35,7 @@ export interface MetadataSchema {
   totalDelegators: number;
   totalTimelineEntries: number;
   timelinePartitions: number;
+  delegateAddress?: string;
 }
 
 export interface CurrentStateSchema {

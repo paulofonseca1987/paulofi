@@ -15,6 +15,7 @@ export default function Home() {
   const [syncing, setSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
   const [syncProgress, setSyncProgress] = useState<SyncProgress | null>(null);
+  const [delegateAddress, setDelegateAddress] = useState<string | null>(null);
 
   const fetchData = async () => {
     try {
@@ -149,6 +150,21 @@ export default function Home() {
   };
 
   useEffect(() => {
+    // Fetch config to get delegate address
+    const fetchConfig = async () => {
+      try {
+        const response = await fetch('/api/config');
+        if (response.ok) {
+          const config = await response.json();
+          setDelegateAddress(config.delegateAddress);
+        }
+      } catch (err) {
+        console.warn('Failed to fetch config:', err);
+      }
+    };
+
+    fetchConfig();
+
     // Check if sync is already in progress FIRST
     fetchSyncProgress();
 
@@ -242,9 +258,16 @@ export default function Home() {
             <div className="mb-4">
               <div className="flex justify-between items-center mb-2">
                 <h3 className="text-lg font-semibold text-gray-800">Syncing Blockchain Data</h3>
-                <span className="text-sm font-medium text-blue-600">
-                  {syncProgress.percentComplete.toFixed(1)}%
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-medium text-blue-600">
+                    {syncProgress.percentComplete.toFixed(1)}%
+                  </span>
+                  <span className="text-sm text-gray-600">
+                    {syncProgress.estimatedTimeRemaining
+                      ? formatDuration(syncProgress.estimatedTimeRemaining)
+                      : 'Calculating...'} remaining
+                  </span>
+                </div>
               </div>
 
               {/* Progress Bar */}
@@ -264,22 +287,22 @@ export default function Home() {
                 <p className="text-gray-600 mb-1">Current Block</p>
                 <p className="font-semibold text-gray-900">{syncProgress.currentBlock.toLocaleString()}</p>
               </div>
-              <div>
-                <p className="text-gray-600 mb-1">Target Block</p>
-                <p className="font-semibold text-gray-900">{syncProgress.targetBlock.toLocaleString()}</p>
-              </div>
+              {metadata && (
+                <div>
+                  <p className="text-gray-600 mb-1">Last Checkpoint Block</p>
+                  <p className="font-semibold text-gray-900">{metadata.lastSyncedBlock.toLocaleString()}</p>
+                </div>
+              )}
               <div>
                 <p className="text-gray-600 mb-1">Events Processed</p>
                 <p className="font-semibold text-gray-900">{syncProgress.eventsProcessed.toLocaleString()}</p>
               </div>
-              <div>
-                <p className="text-gray-600 mb-1">Time Remaining</p>
-                <p className="font-semibold text-gray-900">
-                  {syncProgress.estimatedTimeRemaining
-                    ? formatDuration(syncProgress.estimatedTimeRemaining)
-                    : 'Calculating...'}
-                </p>
-              </div>
+              {metadata && (
+                <div>
+                  <p className="text-gray-600 mb-1">Timeline Entries</p>
+                  <p className="font-semibold text-gray-900">{metadata.totalTimelineEntries.toLocaleString()}</p>
+                </div>
+              )}
             </div>
 
             {/* Block Range Info */}
@@ -307,27 +330,64 @@ export default function Home() {
         ) : metadata && currentState ? (
           <>
             {/* Summary Stats */}
-            <div className="mb-8 grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-sm font-medium text-gray-600 mb-2">Total Voting Power</h3>
-                <p className="text-2xl font-bold text-blue-600">
-                  {(Number(metadata.totalVotingPower) / 1e18).toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                  })} ARB
+                <h3 className="text-sm font-medium text-gray-600 mb-2">Total Tokens Owned</h3>
+                <p className="text-2xl font-bold text-green-600">
+                  {(() => {
+                    // Check if delegate address is in the delegators list
+                    const balance = delegateAddress && currentState.delegators[delegateAddress]
+                      ? currentState.delegators[delegateAddress]
+                      : '0';
+                    const formatted = (Number(balance) / 1e18).toLocaleString(undefined, {
+                      minimumFractionDigits: 6,
+                      maximumFractionDigits: 6
+                    });
+                    const [integerPart, decimalPart] = formatted.split('.');
+                    return (
+                      <>
+                        {integerPart}
+                        {decimalPart && (
+                          <>
+                            <span>.</span>
+                            <span style={{ opacity: 0.5 }}>{decimalPart}</span>
+                          </>
+                        )}
+                        {' ARB'}
+                      </>
+                    );
+                  })()}
                 </p>
               </div>
               <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-sm font-medium text-gray-600 mb-2">Total Delegators</h3>
-                <p className="text-2xl font-bold text-purple-600">{metadata.totalDelegators}</p>
+                <h3 className="text-sm font-medium text-gray-600 mb-2">Total Active Delegators</h3>
+                <p className="text-2xl font-bold text-purple-600">
+                  {Object.values(currentState.delegators).filter(balance => BigInt(balance) > 0n).length}
+                </p>
               </div>
               <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-sm font-medium text-gray-600 mb-2">Timeline Entries</h3>
-                <p className="text-2xl font-bold text-green-600">{metadata.totalTimelineEntries}</p>
-              </div>
-              <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-sm font-medium text-gray-600 mb-2">Last Synced Block</h3>
-                <p className="text-2xl font-bold text-orange-600">{metadata.lastSyncedBlock.toLocaleString()}</p>
+                <h3 className="text-sm font-medium text-gray-600 mb-2">Total Voting Power</h3>
+                <p className="text-2xl font-bold text-blue-600">
+                  {(() => {
+                    const formatted = (Number(metadata.totalVotingPower) / 1e18).toLocaleString(undefined, {
+                      minimumFractionDigits: 6,
+                      maximumFractionDigits: 6
+                    });
+                    const [integerPart, decimalPart] = formatted.split('.');
+                    return (
+                      <>
+                        {integerPart}
+                        {decimalPart && (
+                          <>
+                            <span>.</span>
+                            <span style={{ opacity: 0.5 }}>{decimalPart}</span>
+                          </>
+                        )}
+                        {' ARB'}
+                      </>
+                    );
+                  })()}
+                </p>
               </div>
             </div>
 
@@ -351,29 +411,6 @@ export default function Home() {
             {/* Delegators List */}
             <div className="mb-8">
               <DelegatorsList delegators={currentState.delegators} timeline={timeline} />
-            </div>
-
-            {/* Metadata Info */}
-            <div className="mb-8 bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold mb-3 text-gray-700">System Info</h3>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-gray-600">Last Sync Time:</span>
-                  <span className="ml-2 font-medium">{formatTimestamp(metadata.lastSyncTimestamp)}</span>
-                </div>
-                <div>
-                  <span className="text-gray-600">Data Partitions:</span>
-                  <span className="ml-2 font-medium">{metadata.timelinePartitions}</span>
-                </div>
-                <div>
-                  <span className="text-gray-600">As of Block:</span>
-                  <span className="ml-2 font-medium">{currentState.asOfBlock.toLocaleString()}</span>
-                </div>
-                <div>
-                  <span className="text-gray-600">Auto-sync:</span>
-                  <span className="ml-2 font-medium text-green-600">Active</span>
-                </div>
-              </div>
             </div>
           </>
         ) : (

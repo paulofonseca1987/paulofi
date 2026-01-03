@@ -302,7 +302,8 @@ export async function POST(request: NextRequest) {
           totalVotingPower: totalVotingPower.toString(),
           totalDelegators: Object.keys(currentDelegators).length,
           totalTimelineEntries,
-          timelinePartitions: Math.ceil(totalTimelineEntries / 1000)
+          timelinePartitions: Math.ceil(totalTimelineEntries / 1000),
+          delegateAddress: delegateAddress.toLowerCase()
         };
 
         const newCurrentState: CurrentStateSchema = {

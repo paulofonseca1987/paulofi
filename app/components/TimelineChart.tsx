@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   AreaChart,
   Area,
@@ -18,6 +19,8 @@ interface TimelineChartProps {
 }
 
 export default function TimelineChart({ timeline }: TimelineChartProps) {
+  const [hiddenDelegates, setHiddenDelegates] = useState<Set<string>>(new Set());
+
   if (timeline.length === 0) {
     return (
       <div className="flex items-center justify-center h-96 bg-gray-50 rounded-lg">
@@ -43,14 +46,90 @@ export default function TimelineChart({ timeline }: TimelineChartProps) {
       total: parseFloat(entry.totalVotingPower) / 1e18, // Convert from wei
     };
 
-    // Add each delegator's balance
+    // Add each delegator's balance only if they exist in this entry
     delegatorAddresses.forEach((addr) => {
-      const balance = entry.delegators[addr] || "0";
-      dataPoint[addr] = parseFloat(balance) / 1e18;
+      if (entry.delegators[addr]) {
+        const balance = entry.delegators[addr];
+        dataPoint[addr] = parseFloat(balance) / 1e18;
+      }
+      // Don't add the property if the delegator doesn't exist in this entry
     });
 
     return dataPoint;
   });
+
+  // Add vertical lines: for each delegator's first appearance, add a 0 value at the previous timestamp
+  const seenDelegators = new Set<string>();
+  chartData.forEach((dataPoint, index) => {
+    delegatorAddresses.forEach((addr) => {
+      // If this delegator appears for the first time
+      if (dataPoint[addr] !== undefined && !seenDelegators.has(addr)) {
+        // Mark as seen
+        seenDelegators.add(addr);
+        // If there's a previous data point, add a 0 value for this delegator
+        if (index > 0) {
+          chartData[index - 1][addr] = 0;
+        }
+      }
+    });
+  });
+
+  // Extend to January 1st, 2026 with the same values as the last entry
+  const jan1_2026 = new Date("2026-01-01").getTime() / 1000; // Unix timestamp
+  if (chartData.length > 0) {
+    const lastEntry = chartData[chartData.length - 1];
+    const extendedDataPoint: any = {
+      timestamp: jan1_2026,
+      date: format(new Date(jan1_2026 * 1000), "MMM dd, yyyy HH:mm"),
+      blockNumber: lastEntry.blockNumber, // Use same block number
+      total: lastEntry.total,
+    };
+
+    // Copy only the delegator balances that exist in the last entry
+    delegatorAddresses.forEach((addr) => {
+      if (lastEntry[addr] !== undefined) {
+        extendedDataPoint[addr] = lastEntry[addr];
+      }
+    });
+
+    chartData.push(extendedDataPoint);
+  }
+
+  // Calculate dynamic Y-axis scale based on visible data
+  const maxTotal = Math.max(
+    ...chartData.map((d) => {
+      // Sum only visible delegates
+      let sum = 0;
+      delegatorAddresses.forEach((addr) => {
+        if (!hiddenDelegates.has(addr)) {
+          sum += d[addr] || 0;
+        }
+      });
+      return sum;
+    })
+  );
+  // Round up to nearest nice number, with a minimum of 1000 ARB
+  const maxYAxis = Math.max(1000, Math.ceil(maxTotal / 1000) * 1000); // Round to nearest 1k, min 1000
+
+  // Generate ticks at 1k intervals
+  const yAxisTicks: number[] = [];
+  for (let i = 0; i <= maxYAxis; i += 1000) {
+    yAxisTicks.push(i);
+  }
+
+  // Handle legend click to toggle delegate visibility
+  const handleLegendClick = (data: any) => {
+    const address = data.value;
+    setHiddenDelegates((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(address)) {
+        newSet.delete(address);
+      } else {
+        newSet.add(address);
+      }
+      return newSet;
+    });
+  };
 
   // Generate colors for delegators
   const colors = [
@@ -108,15 +187,15 @@ export default function TimelineChart({ timeline }: TimelineChartProps) {
     return null;
   };
 
-  // Set fixed date range: September 1st 2024 to December 31st 2025
+  // Set fixed date range: September 1st 2024 to January 1st 2026
   const startDate = new Date("2024-09-01").getTime() / 1000; // Unix timestamp
-  const endDate = new Date("2025-12-31").getTime() / 1000; // Unix timestamp
+  const endDate = new Date("2026-01-01").getTime() / 1000; // Unix timestamp
 
   // Generate ticks for the 1st of each month
   const monthlyTicks: number[] = [];
-  for (let year = 2024; year <= 2025; year++) {
-    const startMonth = year === 2024 ? 8 : 0; // September (8) for 2024, January (0) for 2025
-    const endMonth = year === 2025 ? 11 : 11; // December (11) for both
+  for (let year = 2024; year <= 2026; year++) {
+    const startMonth = year === 2024 ? 8 : 0; // September (8) for 2024, January (0) for others
+    const endMonth = year === 2026 ? 0 : 11; // January (0) for 2026, December (11) for others
 
     for (let month = startMonth; month <= endMonth; month++) {
       const monthStart = new Date(year, month, 1).getTime() / 1000;
@@ -168,25 +247,24 @@ export default function TimelineChart({ timeline }: TimelineChartProps) {
             interval={0}
           />
           <YAxis
-            tickFormatter={(value) => `${value / 1000}k`}
+            tickFormatter={(value) => value === 0 ? '' : `${value / 1000}k`}
             label={{
               value: "Voting Power (ARB)",
               angle: -90,
               position: "insideLeft",
             }}
-            domain={[0, 800000]}
-            ticks={[
-              0, 100000, 200000, 300000, 400000, 500000, 600000, 700000, 800000,
-            ]}
+            domain={[0, maxYAxis]}
+            ticks={yAxisTicks}
             tick={{ fontSize: 10 }}
           />
           <Tooltip content={<CustomTooltip />} />
           <Legend
-            wrapperStyle={{ paddingTop: "20px" }}
+            wrapperStyle={{ paddingTop: "20px", cursor: "pointer" }}
             formatter={(value: string) => {
               const addr = value;
               return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
             }}
+            onClick={handleLegendClick}
           />
           {delegatorList.map((addr, idx) => (
             <Area
@@ -197,6 +275,7 @@ export default function TimelineChart({ timeline }: TimelineChartProps) {
               stroke={colors[idx % colors.length]}
               fill={`url(#color${addr})`}
               name={addr}
+              hide={hiddenDelegates.has(addr)}
             />
           ))}
         </AreaChart>

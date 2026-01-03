@@ -667,3 +667,33 @@ export async function getTokenCreationBlock(
   }
 }
 
+/**
+ * Get the current ARB token balance of an address
+ */
+export async function getTokenBalance(
+  client: PublicClient,
+  tokenAddress: Address,
+  accountAddress: Address
+): Promise<bigint> {
+  try {
+    const balance = await client.readContract({
+      address: tokenAddress,
+      abi: [
+        {
+          name: 'balanceOf',
+          type: 'function',
+          stateMutability: 'view',
+          inputs: [{ name: 'account', type: 'address' }],
+          outputs: [{ name: '', type: 'uint256' }],
+        },
+      ],
+      functionName: 'balanceOf',
+      args: [accountAddress],
+    });
+    return balance as bigint;
+  } catch (error) {
+    console.error(`Failed to get balance for ${accountAddress}:`, error);
+    return 0n;
+  }
+}
+
