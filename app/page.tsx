@@ -215,11 +215,11 @@ export default function Home() {
   }, [syncing]);
 
   return (
-    <main className="min-h-screen p-8 bg-gray-50">
+    <main className="min-h-screen p-8 bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Voting Power Tracker</h1>
-          <p className="text-gray-600">ARB Token Delegation on Arbitrum</p>
+          <h1 className="text-3xl font-bold mb-2 dark:text-white">Voting Power Tracker</h1>
+          <p className="text-gray-600 dark:text-gray-400">ARB Token Delegation on Arbitrum</p>
         </div>
 
         <div className="mb-6 flex gap-4 items-center flex-wrap">
@@ -239,30 +239,30 @@ export default function Home() {
           </button>
 
           {metadata && (
-            <div className="flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center gap-2 px-4 py-2 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <p className="text-sm text-green-800">
+              <p className="text-sm text-green-800 dark:text-green-300">
                 Last sync: {formatTimeSince(metadata.lastSyncTimestamp)}
               </p>
             </div>
           )}
 
           {syncStatus && (
-            <p className="text-sm text-green-600">{syncStatus}</p>
+            <p className="text-sm text-green-600 dark:text-green-400">{syncStatus}</p>
           )}
         </div>
 
         {/* Sync Progress Visualization */}
         {syncProgress && syncProgress.isActive && (
-          <div className="mb-6 bg-white rounded-lg shadow p-6">
+          <div className="mb-6 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div className="mb-4">
               <div className="flex justify-between items-center mb-2">
-                <h3 className="text-lg font-semibold text-gray-800">Syncing Blockchain Data</h3>
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Syncing Blockchain Data</h3>
                 <div className="flex items-center gap-3">
-                  <span className="text-sm font-medium text-blue-600">
+                  <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
                     {syncProgress.percentComplete.toFixed(1)}%
                   </span>
-                  <span className="text-sm text-gray-600">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
                     {syncProgress.estimatedTimeRemaining
                       ? formatDuration(syncProgress.estimatedTimeRemaining)
                       : 'Calculating...'} remaining
@@ -271,7 +271,7 @@ export default function Home() {
               </div>
 
               {/* Progress Bar */}
-              <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
                 <div
                   className="bg-blue-600 h-3 rounded-full transition-all duration-500 ease-out relative overflow-hidden"
                   style={{ width: `${syncProgress.percentComplete}%` }}
@@ -284,30 +284,30 @@ export default function Home() {
             {/* Progress Details */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div>
-                <p className="text-gray-600 mb-1">Current Block</p>
-                <p className="font-semibold text-gray-900">{syncProgress.currentBlock.toLocaleString()}</p>
+                <p className="text-gray-600 dark:text-gray-400 mb-1">Current Block</p>
+                <p className="font-semibold text-gray-900 dark:text-gray-100">{syncProgress.currentBlock.toLocaleString()}</p>
               </div>
               {metadata && (
                 <div>
-                  <p className="text-gray-600 mb-1">Last Checkpoint Block</p>
-                  <p className="font-semibold text-gray-900">{metadata.lastSyncedBlock.toLocaleString()}</p>
+                  <p className="text-gray-600 dark:text-gray-400 mb-1">Last Checkpoint Block</p>
+                  <p className="font-semibold text-gray-900 dark:text-gray-100">{metadata.lastSyncedBlock.toLocaleString()}</p>
                 </div>
               )}
               <div>
-                <p className="text-gray-600 mb-1">Events Processed</p>
-                <p className="font-semibold text-gray-900">{syncProgress.eventsProcessed.toLocaleString()}</p>
+                <p className="text-gray-600 dark:text-gray-400 mb-1">Events Processed</p>
+                <p className="font-semibold text-gray-900 dark:text-gray-100">{syncProgress.eventsProcessed.toLocaleString()}</p>
               </div>
               {metadata && (
                 <div>
-                  <p className="text-gray-600 mb-1">Timeline Entries</p>
-                  <p className="font-semibold text-gray-900">{metadata.totalTimelineEntries.toLocaleString()}</p>
+                  <p className="text-gray-600 dark:text-gray-400 mb-1">Timeline Entries</p>
+                  <p className="font-semibold text-gray-900 dark:text-gray-100">{metadata.totalTimelineEntries.toLocaleString()}</p>
                 </div>
               )}
             </div>
 
             {/* Block Range Info */}
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <p className="text-xs text-gray-500">
+            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
                 Processing blocks {syncProgress.startBlock.toLocaleString()} to {syncProgress.targetBlock.toLocaleString()}
               </p>
             </div>
@@ -315,8 +315,8 @@ export default function Home() {
         )}
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-800">{error}</p>
+          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg">
+            <p className="text-red-800 dark:text-red-300">{error}</p>
           </div>
         )}
 
@@ -324,15 +324,15 @@ export default function Home() {
           <div className="flex items-center justify-center h-96">
             <div className="text-center">
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-              <p className="text-gray-500">Loading data...</p>
+              <p className="text-gray-500 dark:text-gray-400">Loading data...</p>
             </div>
           </div>
         ) : metadata && currentState ? (
           <>
             {/* Summary Stats */}
             <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-sm font-medium text-gray-600 mb-2">Total Tokens Owned</h3>
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Total Tokens Owned</h3>
                 <p className="text-2xl font-bold text-green-600">
                   {(() => {
                     // Check if delegate address is in the delegators list
@@ -359,14 +359,14 @@ export default function Home() {
                   })()}
                 </p>
               </div>
-              <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-sm font-medium text-gray-600 mb-2">Total Active Delegators</h3>
-                <p className="text-2xl font-bold text-purple-600">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Total Active Delegators</h3>
+                <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                   {Object.values(currentState.delegators).filter(balance => BigInt(balance) > 0n).length}
                 </p>
               </div>
-              <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-sm font-medium text-gray-600 mb-2">Total Voting Power</h3>
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Total Voting Power</h3>
                 <p className="text-2xl font-bold text-blue-600">
                   {(() => {
                     const formatted = (Number(metadata.totalVotingPower) / 1e18).toLocaleString(undefined, {
@@ -392,19 +392,19 @@ export default function Home() {
             </div>
 
             {/* Timeline Chart */}
-            <div className="mb-8 bg-white rounded-lg shadow p-6">
-              <h2 className="text-2xl font-semibold mb-4">Voting Power Timeline</h2>
+            <div className="mb-8 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+              <h2 className="text-2xl font-semibold mb-4 dark:text-white">Voting Power Timeline</h2>
               {timelineLoading ? (
                 <div className="flex items-center justify-center h-64">
                   <div className="text-center">
                     <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
-                    <p className="text-sm text-gray-500">Loading timeline data...</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Loading timeline data...</p>
                   </div>
                 </div>
               ) : timeline.length > 0 ? (
                 <TimelineChart timeline={timeline} />
               ) : (
-                <p className="text-gray-500">No timeline data available.</p>
+                <p className="text-gray-500 dark:text-gray-400">No timeline data available.</p>
               )}
             </div>
 
@@ -414,8 +414,8 @@ export default function Home() {
             </div>
           </>
         ) : (
-          <div className="bg-white rounded-lg shadow p-6">
-            <p className="text-gray-500">No data available. Click "Sync Data" to start tracking.</p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <p className="text-gray-500 dark:text-gray-400">No data available. Click "Sync Data" to start tracking.</p>
           </div>
         )}
       </div>

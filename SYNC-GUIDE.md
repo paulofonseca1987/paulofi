@@ -75,12 +75,12 @@ With the new balance tracking feature, the sync captures:
 - ✅ **Complete voting power history** for all delegators
 - ✅ **Every ARB token transfer** by delegators
 
-## Performance
+## Performance Notes
 
-- **Speed**: ~10,000 blocks per request for events
-- **Time**: 2-3 hours for full sync (167M blocks)
-- **Accuracy**: 100% - captures every voting power change
-- **Storage**: Timeline entries saved every 1M blocks
+- **Speed**: Processes roughly 10,000 blocks per request
+- **Time**: A full sync typically takes 2-3 hours (~167M blocks)
+- **Approach**: Attempts to capture all voting power changes by scanning event logs
+- **Storage**: Timeline entries are saved approximately every 1M blocks
 
 ## Troubleshooting
 

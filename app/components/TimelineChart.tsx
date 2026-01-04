@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   AreaChart,
   Area,
@@ -20,11 +20,21 @@ interface TimelineChartProps {
 
 export default function TimelineChart({ timeline }: TimelineChartProps) {
   const [hiddenDelegates, setHiddenDelegates] = useState<Set<string>>(new Set());
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    setIsDark(mediaQuery.matches);
+
+    const handler = (e: MediaQueryListEvent) => setIsDark(e.matches);
+    mediaQuery.addEventListener('change', handler);
+    return () => mediaQuery.removeEventListener('change', handler);
+  }, []);
 
   if (timeline.length === 0) {
     return (
-      <div className="flex items-center justify-center h-96 bg-gray-50 rounded-lg">
-        <p className="text-gray-500">No timeline data available</p>
+      <div className="flex items-center justify-center h-96 bg-gray-50 dark:bg-gray-900 rounded-lg">
+        <p className="text-gray-500 dark:text-gray-400">No timeline data available</p>
       </div>
     );
   }
@@ -161,12 +171,12 @@ export default function TimelineChart({ timeline }: TimelineChartProps) {
       const visibleTotal = Object.values(delegateValues).reduce((sum, val) => sum + val, 0);
 
       return (
-        <div className="bg-white p-4 border border-gray-200 rounded-lg shadow-lg">
-          <p className="font-semibold mb-2">{currentPoint.date}</p>
-          <p className="text-sm text-gray-600 mb-1">
+        <div className="bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
+          <p className="font-semibold mb-2 dark:text-white">{currentPoint.date}</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
             Block: {currentPoint.blockNumber}
           </p>
-          <p className="text-sm font-medium mb-2">
+          <p className="text-sm font-medium mb-2 dark:text-gray-200">
             Total:{" "}
             {visibleTotal.toLocaleString(undefined, {
               minimumFractionDigits: 2,
@@ -181,7 +191,7 @@ export default function TimelineChart({ timeline }: TimelineChartProps) {
               // Find the original index to get the correct color
               const originalIdx = delegatorList.indexOf(addr);
               return (
-                <p key={addr} className="text-xs">
+                <p key={addr} className="text-xs dark:text-gray-300">
                   <span
                     className="inline-block w-3 h-3 rounded mr-2"
                     style={{ backgroundColor: colors[originalIdx % colors.length] }}
@@ -248,7 +258,7 @@ export default function TimelineChart({ timeline }: TimelineChartProps) {
               </linearGradient>
             ))}
           </defs>
-          <CartesianGrid strokeDasharray="3 3" />
+          <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#374151' : '#e5e7eb'} />
           <XAxis
             dataKey="timestamp"
             tickFormatter={(value) =>
@@ -258,8 +268,9 @@ export default function TimelineChart({ timeline }: TimelineChartProps) {
             scale="time"
             domain={[startDate, endDate]}
             ticks={monthlyTicks}
-            tick={{ fontSize: 10 }}
+            tick={{ fontSize: 10, fill: isDark ? '#9ca3af' : '#4b5563' }}
             interval={0}
+            stroke={isDark ? '#4b5563' : '#9ca3af'}
           />
           <YAxis
             tickFormatter={(value) => value === 0 ? '' : `${value / 1000}k`}
@@ -267,17 +278,19 @@ export default function TimelineChart({ timeline }: TimelineChartProps) {
               value: "Voting Power (ARB)",
               angle: -90,
               position: "insideLeft",
+              fill: isDark ? '#9ca3af' : '#4b5563',
             }}
             domain={[0, maxYAxis]}
             ticks={yAxisTicks}
-            tick={{ fontSize: 10 }}
+            tick={{ fontSize: 10, fill: isDark ? '#9ca3af' : '#4b5563' }}
+            stroke={isDark ? '#4b5563' : '#9ca3af'}
           />
           <Tooltip content={<CustomTooltip />} />
           <Legend
-            wrapperStyle={{ paddingTop: "20px", cursor: "pointer" }}
+            wrapperStyle={{ paddingTop: "20px", cursor: "pointer", color: isDark ? '#d1d5db' : '#374151' }}
             formatter={(value: string) => {
               const addr = value;
-              return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+              return <span style={{ color: isDark ? '#d1d5db' : '#374151' }}>{`${addr.slice(0, 6)}...${addr.slice(-4)}`}</span>;
             }}
             onClick={handleLegendClick}
           />

@@ -86,9 +86,9 @@ export default function DelegatorsList({ delegators, timeline }: DelegatorsListP
 
   if (delegatorEntries.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold mb-4">Delegates</h2>
-        <p className="text-gray-500">No delegators found</p>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <h2 className="text-xl font-semibold mb-4 dark:text-white">Delegates</h2>
+        <p className="text-gray-500 dark:text-gray-400">No delegators found</p>
       </div>
     );
   }
@@ -164,17 +164,17 @@ export default function DelegatorsList({ delegators, timeline }: DelegatorsListP
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <h2 className="text-xl font-semibold mb-4">Delegates</h2>
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+      <h2 className="text-xl font-semibold mb-4 dark:text-white">Delegates</h2>
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead className="bg-gray-50 dark:bg-gray-900">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Address
               </th>
               <th
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
                 onClick={() => handleSort('dateStart')}
               >
                 <div className="flex items-center">
@@ -183,7 +183,7 @@ export default function DelegatorsList({ delegators, timeline }: DelegatorsListP
                 </div>
               </th>
               <th
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
                 onClick={() => handleSort('currentBalance')}
               >
                 <div className="flex items-center">
@@ -191,24 +191,24 @@ export default function DelegatorsList({ delegators, timeline }: DelegatorsListP
                   <SortIcon column="currentBalance" />
                 </div>
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Current %
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {delegatorEntries.map((info) => (
               <tr
                 key={info.address}
-                className="hover:bg-gray-50"
+                className="hover:bg-gray-50 dark:hover:bg-gray-700"
                 style={{ opacity: info.currentBalance === 0n ? 0.5 : 1 }}
               >
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
-                    <span className="font-mono text-sm">{formatAddress(info.address)}</span>
+                    <span className="font-mono text-sm dark:text-gray-300">{formatAddress(info.address)}</span>
                     <button
                       onClick={() => navigator.clipboard.writeText(info.address)}
-                      className="ml-2 text-gray-400 hover:text-gray-600"
+                      className="ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                       title="Copy address"
                     >
                       <svg
@@ -227,24 +227,24 @@ export default function DelegatorsList({ delegators, timeline }: DelegatorsListP
                     </button>
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                   {formatDelegationPeriod(info.dateStart, info.dateEnd)}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium dark:text-gray-200">
                   {formatBalance(info.currentBalance)} ARB
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {info.currentBalance === 0n ? (
-                    <span className="text-sm text-gray-500">No Delegation</span>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">No Delegation</span>
                   ) : (
                     <div className="flex items-center">
-                      <div className="w-32 bg-gray-200 rounded-full h-2 mr-2">
+                      <div className="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-2 mr-2">
                         <div
                           className="bg-blue-600 h-2 rounded-full"
                           style={{ width: `${getPercentage(info.currentBalance)}%` }}
                         />
                       </div>
-                      <span className="text-sm text-gray-600">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
                         {getPercentage(info.currentBalance).toFixed(2)}%
                       </span>
                     </div>
