@@ -58,42 +58,29 @@ export default function TimelineChart({ timeline }: TimelineChartProps) {
     return dataPoint;
   });
 
-  // Add vertical lines: for each delegator's first appearance, add a 0 value at the previous timestamp
-  const seenDelegators = new Set<string>();
+  // Mark data points that have actual changes
   chartData.forEach((dataPoint, index) => {
-    delegatorAddresses.forEach((addr) => {
-      // If this delegator appears for the first time
-      if (dataPoint[addr] !== undefined && !seenDelegators.has(addr)) {
-        // Mark as seen
-        seenDelegators.add(addr);
-        // If there's a previous data point, add a 0 value for this delegator
-        if (index > 0) {
-          chartData[index - 1][addr] = 0;
+    if (index === 0) {
+      // First point always has changes (it's the start)
+      dataPoint._hasChanges = true;
+    } else {
+      const prevPoint = chartData[index - 1];
+      let hasChange = false;
+
+      // Check if any delegator's value changed
+      delegatorAddresses.forEach((addr) => {
+        const currentValue = dataPoint[addr];
+        const prevValue = prevPoint[addr];
+
+        // Check if value changed (including appearing/disappearing)
+        if (currentValue !== prevValue) {
+          hasChange = true;
         }
-      }
-    });
+      });
+
+      dataPoint._hasChanges = hasChange;
+    }
   });
-
-  // Extend to January 1st, 2026 with the same values as the last entry
-  const jan1_2026 = new Date("2026-01-01").getTime() / 1000; // Unix timestamp
-  if (chartData.length > 0) {
-    const lastEntry = chartData[chartData.length - 1];
-    const extendedDataPoint: any = {
-      timestamp: jan1_2026,
-      date: format(new Date(jan1_2026 * 1000), "MMM dd, yyyy HH:mm"),
-      blockNumber: lastEntry.blockNumber, // Use same block number
-      total: lastEntry.total,
-    };
-
-    // Copy only the delegator balances that exist in the last entry
-    delegatorAddresses.forEach((addr) => {
-      if (lastEntry[addr] !== undefined) {
-        extendedDataPoint[addr] = lastEntry[addr];
-      }
-    });
-
-    chartData.push(extendedDataPoint);
-  }
 
   // Calculate dynamic Y-axis scale based on visible data
   const maxTotal = Math.max(
@@ -108,12 +95,12 @@ export default function TimelineChart({ timeline }: TimelineChartProps) {
       return sum;
     })
   );
-  // Round up to nearest nice number, with a minimum of 1000 ARB
-  const maxYAxis = Math.max(1000, Math.ceil(maxTotal / 1000) * 1000); // Round to nearest 1k, min 1000
+  // Round up to nearest nice number, with a minimum of 100000 ARB
+  const maxYAxis = Math.max(100000, Math.ceil(maxTotal / 100000) * 100000); // Round to nearest 100k, min 100k
 
-  // Generate ticks at 1k intervals
+  // Generate ticks at 100k intervals
   const yAxisTicks: number[] = [];
-  for (let i = 0; i <= maxYAxis; i += 1000) {
+  for (let i = 0; i <= maxYAxis; i += 100000) {
     yAxisTicks.push(i);
   }
 
@@ -147,29 +134,57 @@ export default function TimelineChart({ timeline }: TimelineChartProps) {
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
+      const currentPoint = payload[0].payload;
+      const currentIndex = chartData.findIndex((d) => d.timestamp === currentPoint.timestamp);
+
+      // For each visible delegate, get their current value or last known value
+      const delegateValues: { [key: string]: number } = {};
+      const visibleDelegators = delegatorList.filter((addr) => !hiddenDelegates.has(addr));
+
+      visibleDelegators.forEach((addr) => {
+        let value = currentPoint[addr];
+
+        // If value is undefined at current point, look backwards for last known value
+        if (value === undefined && currentIndex > 0) {
+          for (let i = currentIndex - 1; i >= 0; i--) {
+            if (chartData[i][addr] !== undefined) {
+              value = chartData[i][addr];
+              break;
+            }
+          }
+        }
+
+        delegateValues[addr] = value || 0;
+      });
+
+      // Calculate total for visible delegates
+      const visibleTotal = Object.values(delegateValues).reduce((sum, val) => sum + val, 0);
+
       return (
         <div className="bg-white p-4 border border-gray-200 rounded-lg shadow-lg">
-          <p className="font-semibold mb-2">{payload[0].payload.date}</p>
+          <p className="font-semibold mb-2">{currentPoint.date}</p>
           <p className="text-sm text-gray-600 mb-1">
-            Block: {payload[0].payload.blockNumber}
+            Block: {currentPoint.blockNumber}
           </p>
           <p className="text-sm font-medium mb-2">
             Total:{" "}
-            {payload[0].payload.total.toLocaleString(undefined, {
+            {visibleTotal.toLocaleString(undefined, {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             })}{" "}
             ARB
           </p>
           <div className="space-y-1">
-            {delegatorList.map((addr, idx) => {
-              const value = payload[0].payload[addr] || 0;
+            {visibleDelegators.map((addr) => {
+              const value = delegateValues[addr];
               if (value === 0) return null;
+              // Find the original index to get the correct color
+              const originalIdx = delegatorList.indexOf(addr);
               return (
                 <p key={addr} className="text-xs">
                   <span
                     className="inline-block w-3 h-3 rounded mr-2"
-                    style={{ backgroundColor: colors[idx % colors.length] }}
+                    style={{ backgroundColor: colors[originalIdx % colors.length] }}
                   />
                   {addr.slice(0, 6)}...{addr.slice(-4)}:{" "}
                   {value.toLocaleString(undefined, {

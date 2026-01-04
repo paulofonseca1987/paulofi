@@ -340,8 +340,8 @@ export default function Home() {
                       ? currentState.delegators[delegateAddress]
                       : '0';
                     const formatted = (Number(balance) / 1e18).toLocaleString(undefined, {
-                      minimumFractionDigits: 6,
-                      maximumFractionDigits: 6
+                      minimumFractionDigits: 3,
+                      maximumFractionDigits: 3
                     });
                     const [integerPart, decimalPart] = formatted.split('.');
                     return (
@@ -350,7 +350,7 @@ export default function Home() {
                         {decimalPart && (
                           <>
                             <span>.</span>
-                            <span style={{ opacity: 0.5 }}>{decimalPart}</span>
+                            <span>{decimalPart}</span>
                           </>
                         )}
                         {' ARB'}
@@ -370,8 +370,8 @@ export default function Home() {
                 <p className="text-2xl font-bold text-blue-600">
                   {(() => {
                     const formatted = (Number(metadata.totalVotingPower) / 1e18).toLocaleString(undefined, {
-                      minimumFractionDigits: 6,
-                      maximumFractionDigits: 6
+                      minimumFractionDigits: 3,
+                      maximumFractionDigits: 3
                     });
                     const [integerPart, decimalPart] = formatted.split('.');
                     return (
@@ -380,7 +380,7 @@ export default function Home() {
                         {decimalPart && (
                           <>
                             <span>.</span>
-                            <span style={{ opacity: 0.5 }}>{decimalPart}</span>
+                            <span>{decimalPart}</span>
                           </>
                         )}
                         {' ARB'}
