@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   ComposedChart,
   Area,
@@ -9,7 +9,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from "recharts";
 import { format } from "date-fns";
@@ -23,15 +22,15 @@ interface TimelineChartProps {
 // Vote source colors
 const VOTE_COLORS = {
   snapshot: "#f97316", // orange
-  "onchain-core": "#3b82f6", // blue (core)
   "onchain-treasury": "#22c55e", // green (treasury)
+  "onchain-core": "#3b82f6", // blue (core)
 };
 
 // Vote type labels for display
 const VOTE_LABELS = {
   snapshot: "Snapshot",
-  "onchain-core": "Arbitrum Core",
   "onchain-treasury": "Arbitrum Treasury",
+  "onchain-core": "Arbitrum Core",
 };
 
 type VoteSource = keyof typeof VOTE_COLORS;
@@ -48,6 +47,8 @@ export default function TimelineChart({
   );
   const [isDark, setIsDark] = useState(false);
   const [hoveredVote, setHoveredVote] = useState<VoteEntry | null>(null);
+  const [containerWidth, setContainerWidth] = useState(800);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Toggle vote type visibility
   const toggleVoteType = (voteType: VoteSource) => {
@@ -69,6 +70,20 @@ export default function TimelineChart({
     const handler = (e: MediaQueryListEvent) => setIsDark(e.matches);
     mediaQuery.addEventListener("change", handler);
     return () => mediaQuery.removeEventListener("change", handler);
+  }, []);
+
+  // Track container width for dynamic tick calculation
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setContainerWidth(entry.contentRect.width);
+      }
+    });
+
+    resizeObserver.observe(containerRef.current);
+    return () => resizeObserver.disconnect();
   }, []);
 
   if (timeline.length === 0) {
@@ -182,21 +197,8 @@ export default function TimelineChart({
       };
     });
 
-  // Calculate dynamic Y-axis scale based on visible data
-  const maxTotal = Math.max(
-    ...chartData.map((d) => {
-      // Sum only visible delegates
-      let sum = 0;
-      delegatorAddresses.forEach((addr) => {
-        if (!hiddenDelegates.has(addr)) {
-          sum += d[addr] || 0;
-        }
-      });
-      return sum;
-    }),
-  );
-  // Round up to nearest nice number, with a minimum of 100000 ARB
-  const maxYAxis = Math.max(100000, Math.ceil(maxTotal / 100000) * 100000); // Round to nearest 100k, min 100k
+  // Fixed Y-axis scale at 750k
+  const maxYAxis = 750000;
 
   // Generate ticks at 100k intervals
   const yAxisTicks: number[] = [];
@@ -252,28 +254,19 @@ export default function TimelineChart({
         breakdown.sort((a, b) => (b.balance > a.balance ? 1 : -1));
         const nonZeroBreakdown = breakdown.filter((d) => d.balance > BigInt(1));
 
-        const truncatedTitle = vote.proposalTitle
-          ? vote.proposalTitle.length > 38
-            ? vote.proposalTitle.slice(0, 38) + "..."
-            : vote.proposalTitle
-          : null;
+        const title = vote.proposalTitle || sourceLabels[vote.source];
 
         return (
           <div className="bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg w-[352px]">
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-2 h-12">
               <span
-                className="inline-block w-3 h-3 rounded-full"
+                className="inline-block w-3 h-3 rotate-45 flex-shrink-0"
                 style={{ backgroundColor: VOTE_COLORS[vote.source] }}
               />
-              <span className="font-semibold dark:text-white">
-                {sourceLabels[vote.source]}
+              <span className="font-semibold dark:text-white line-clamp-2">
+                {title}
               </span>
             </div>
-            {truncatedTitle && (
-              <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
-                {truncatedTitle}
-              </p>
-            )}
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
               Snapshot:{" "}
               {format(
@@ -360,45 +353,58 @@ export default function TimelineChart({
         0,
       );
 
+      // Filter out zero-value delegators
+      const nonZeroDelegators = visibleDelegators.filter(
+        (addr) => delegateValues[addr] > 0,
+      );
+
       return (
-        <div className="bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
+        <div className="bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg w-[352px]">
           <p className="font-semibold mb-2 dark:text-white">
             {currentPoint.date}
           </p>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
             Block: {currentPoint.blockNumber}
           </p>
           <p className="text-sm font-medium mb-2 dark:text-gray-200">
-            Total:{" "}
+            Voting Power:{" "}
             {visibleTotal.toLocaleString(undefined, {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             })}{" "}
             ARB
           </p>
-          <div className="space-y-1">
-            {visibleDelegators.map((addr) => {
-              const value = delegateValues[addr];
-              if (value === 0) return null;
-              // Find the original index to get the correct color
-              const originalIdx = delegatorList.indexOf(addr);
-              return (
-                <p key={addr} className="text-xs dark:text-gray-300">
-                  <span
-                    className="inline-block w-3 h-3 rounded mr-2"
-                    style={{
-                      backgroundColor: colors[originalIdx % colors.length],
-                    }}
-                  />
-                  {addr.slice(0, 6)}...{addr.slice(-4)}:{" "}
-                  {value.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}{" "}
-                  ARB
-                </p>
-              );
-            })}
+          <div className="border-t border-gray-200 dark:border-gray-600 pt-2 mt-2">
+            <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+              Delegator Breakdown:
+            </p>
+            <div className="space-y-1">
+              {nonZeroDelegators.map((addr) => {
+                const value = delegateValues[addr];
+                const percentage =
+                  visibleTotal > 0 ? (value / visibleTotal) * 100 : 0;
+                return (
+                  <p
+                    key={addr}
+                    className="text-xs dark:text-gray-300 flex gap-2"
+                  >
+                    <span className="flex-shrink-0">
+                      {addr.slice(0, 6)}...{addr.slice(-4)}
+                    </span>
+                    <span className="flex-grow text-right">
+                      {value.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}{" "}
+                      ARB
+                    </span>
+                    <span className="text-gray-500 text-right w-14 flex-shrink-0">
+                      {percentage.toFixed(2)}%
+                    </span>
+                  </p>
+                );
+              })}
+            </div>
           </div>
         </div>
       );
@@ -411,16 +417,22 @@ export default function TimelineChart({
   // endDate is defined earlier (for synthetic point)
 
   // Generate ticks for the 1st of each month
-  const monthlyTicks: number[] = [];
+  const allMonthlyTicks: number[] = [];
   for (let year = 2024; year <= 2026; year++) {
     const startMonth = year === 2024 ? 8 : 0; // September (8) for 2024, January (0) for others
     const endMonth = year === 2026 ? 0 : 11; // January (0) for 2026, December (11) for others
 
     for (let month = startMonth; month <= endMonth; month++) {
       const monthStart = new Date(year, month, 1).getTime() / 1000;
-      monthlyTicks.push(monthStart);
+      allMonthlyTicks.push(monthStart);
     }
   }
+
+  // Calculate how many ticks to show based on container width
+  // Approximate 70px per label
+  const maxLabels = Math.max(2, Math.floor(containerWidth / 70));
+  const tickInterval = Math.ceil(allMonthlyTicks.length / maxLabels);
+  const monthlyTicks = allMonthlyTicks.filter((_, index) => index % tickInterval === 0);
 
   // Custom diamond shape for vote markers
   const DiamondShape = (props: any) => {
@@ -438,10 +450,61 @@ export default function TimelineChart({
     );
   };
 
+  // Toggle all delegators visibility
+  const toggleAllDelegators = () => {
+    if (hiddenDelegates.size === delegatorList.length) {
+      // All hidden, show all
+      setHiddenDelegates(new Set());
+    } else {
+      // Some or none hidden, hide all
+      setHiddenDelegates(new Set(delegatorList));
+    }
+  };
+
+  // Toggle all votes visibility
+  const toggleAllVotes = () => {
+    const allVoteTypes = Object.keys(VOTE_COLORS) as VoteSource[];
+    if (hiddenVoteTypes.size === allVoteTypes.length) {
+      // All hidden, show all
+      setHiddenVoteTypes(new Set());
+    } else {
+      // Some or none hidden, hide all
+      setHiddenVoteTypes(new Set(allVoteTypes));
+    }
+  };
+
+  // Eye icon component
+  const EyeIcon = ({ visible, className = "" }: { visible: boolean; className?: string }) => (
+    <svg
+      className={`w-4 h-4 ${className}`}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {visible ? (
+        <>
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+          <circle cx="12" cy="12" r="3" />
+        </>
+      ) : (
+        <>
+          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+          <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+          <line x1="1" y1="1" x2="23" y2="23" />
+        </>
+      )}
+    </svg>
+  );
+
   return (
-    <div className="w-full" style={{ height: "768px" }}>
+    <div className="w-full flex gap-4" style={{ height: "663px" }}>
+      {/* Chart container */}
+      <div className="flex-1 h-full" ref={containerRef}>
       <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+        <ComposedChart data={chartData} margin={{ top: 10, right: 30, left: -26, bottom: 0 }}>
           <defs>
             {delegatorList.map((addr, idx) => (
               <linearGradient
@@ -493,24 +556,8 @@ export default function TimelineChart({
           />
           <Tooltip
             content={<CustomTooltip />}
-            position={{ x: 60, y: 20 }}
-            wrapperStyle={{ pointerEvents: 'none' }}
-          />
-          <Legend
-            wrapperStyle={{
-              paddingTop: "20px",
-              cursor: "pointer",
-              color: isDark ? "#d1d5db" : "#374151",
-            }}
-            formatter={(value: string) => {
-              const addr = value;
-              return (
-                <span
-                  style={{ color: isDark ? "#d1d5db" : "#374151" }}
-                >{`${addr.slice(0, 6)}...${addr.slice(-4)}`}</span>
-              );
-            }}
-            onClick={handleLegendClick}
+            position={{ x: 34, y: 20 }}
+            wrapperStyle={{ pointerEvents: 'none', marginLeft: 12 }}
           />
           {delegatorList.map((addr, idx) => (
             <Area
@@ -536,29 +583,125 @@ export default function TimelineChart({
           )}
         </ComposedChart>
       </ResponsiveContainer>
-      {/* Vote type legend */}
-      {votes.length > 0 && (
-        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-4 text-xs text-gray-600 dark:text-gray-400">
-            <span className="font-medium">Vote Markers:</span>
-            {(Object.keys(VOTE_COLORS) as VoteSource[]).map((voteType) => (
+      </div>
+
+      {/* Layers Panel */}
+      <div className="w-48 flex-shrink-0 h-full overflow-y-auto">
+          {/* Votes Section */}
+          {votes.length > 0 && (
+            <div className="border-b border-gray-200 dark:border-gray-700">
+              {/* Section Header */}
               <button
-                key={voteType}
-                onClick={() => toggleVoteType(voteType)}
-                className={`flex items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity ${
-                  hiddenVoteTypes.has(voteType) ? "opacity-40 line-through" : ""
-                }`}
+                onClick={toggleAllVotes}
+                className="w-full px-4 py-2 flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               >
-                <span
-                  className="w-3 h-3 rotate-45"
-                  style={{ backgroundColor: VOTE_COLORS[voteType] }}
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Votes
+                </span>
+                <span className="text-xs text-gray-500 dark:text-gray-500">
+                  {Object.keys(VOTE_COLORS).length - hiddenVoteTypes.size}/{Object.keys(VOTE_COLORS).length}
+                </span>
+                <EyeIcon
+                  visible={hiddenVoteTypes.size !== Object.keys(VOTE_COLORS).length}
+                  className={`flex-shrink-0 ml-auto ${
+                    hiddenVoteTypes.size === Object.keys(VOTE_COLORS).length
+                      ? "text-gray-400 dark:text-gray-600"
+                      : "text-gray-600 dark:text-gray-400"
+                  }`}
                 />
-                {VOTE_LABELS[voteType]}
               </button>
-            ))}
+
+              {/* Individual Vote Types */}
+              <div className="pb-2">
+                {(Object.keys(VOTE_COLORS) as VoteSource[]).map((voteType) => {
+                  const isVisible = !hiddenVoteTypes.has(voteType);
+                  return (
+                    <button
+                      key={voteType}
+                      onClick={() => toggleVoteType(voteType)}
+                      className={`w-full px-4 py-1.5 flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${
+                        !isVisible ? "opacity-50" : ""
+                      }`}
+                    >
+                      <span
+                        className="w-3 h-3 rotate-45 flex-shrink-0"
+                        style={{ backgroundColor: VOTE_COLORS[voteType] }}
+                      />
+                      <span className="text-xs text-gray-600 dark:text-gray-400">
+                        {VOTE_LABELS[voteType]}
+                      </span>
+                      <EyeIcon
+                        visible={isVisible}
+                        className={`flex-shrink-0 ml-auto ${
+                          isVisible
+                            ? "text-gray-600 dark:text-gray-400"
+                            : "text-gray-400 dark:text-gray-600"
+                        }`}
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Delegators Section */}
+          <div>
+            {/* Section Header */}
+            <button
+              onClick={toggleAllDelegators}
+              className="w-full px-4 py-2 flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            >
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Delegators
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-500">
+                {delegatorList.length - hiddenDelegates.size}/{delegatorList.length}
+              </span>
+              <EyeIcon
+                visible={hiddenDelegates.size !== delegatorList.length}
+                className={`flex-shrink-0 ml-auto ${
+                  hiddenDelegates.size === delegatorList.length
+                    ? "text-gray-400 dark:text-gray-600"
+                    : "text-gray-600 dark:text-gray-400"
+                }`}
+              />
+            </button>
+
+            {/* Individual Delegators */}
+            <div className="pb-2">
+              {[...delegatorList].reverse().map((addr) => {
+                const idx = delegatorList.indexOf(addr);
+                const isVisible = !hiddenDelegates.has(addr);
+                return (
+                  <button
+                    key={addr}
+                    onClick={() => handleLegendClick({ value: addr })}
+                    className={`w-full px-4 py-1.5 flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${
+                      !isVisible ? "opacity-50" : ""
+                    }`}
+                  >
+                    <span
+                      className="w-3 h-3 rounded flex-shrink-0"
+                      style={{ backgroundColor: colors[idx % colors.length] }}
+                    />
+                    <span className="text-xs text-gray-600 dark:text-gray-400 font-mono truncate">
+                      {addr.slice(0, 6)}...{addr.slice(-4)}
+                    </span>
+                    <EyeIcon
+                      visible={isVisible}
+                      className={`flex-shrink-0 ml-auto ${
+                        isVisible
+                          ? "text-gray-600 dark:text-gray-400"
+                          : "text-gray-400 dark:text-gray-600"
+                      }`}
+                    />
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 }

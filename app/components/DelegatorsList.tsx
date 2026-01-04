@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import type { TimelineEntry } from '@/lib/types';
+import type { TimelineEntry, DelegatorRewardShare } from '@/lib/types';
 
 interface DelegatorsListProps {
   delegators: Record<string, string>;
   timeline: TimelineEntry[];
+  rewardShares?: Record<string, DelegatorRewardShare>;
 }
 
 interface DelegatorInfo {
@@ -13,10 +14,13 @@ interface DelegatorInfo {
   dateStart: number | null;
   dateEnd: number | null;
   currentBalance: bigint;
+  rewardContribution: bigint;
+  rewardVoteCount: number;
+  rewardPercentage: number;
 }
 
-export default function DelegatorsList({ delegators, timeline }: DelegatorsListProps) {
-  const [sortColumn, setSortColumn] = useState<'dateStart' | 'currentBalance'>('currentBalance');
+export default function DelegatorsList({ delegators, timeline, rewardShares }: DelegatorsListProps) {
+  const [sortColumn, setSortColumn] = useState<'dateStart' | 'currentBalance' | 'rewardPercentage'>('rewardPercentage');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   // Process timeline to get all delegators (past and current) with dates
@@ -32,6 +36,9 @@ export default function DelegatorsList({ delegators, timeline }: DelegatorsListP
           dateStart: entry.timestamp,
           dateEnd: null,
           currentBalance: 0n,
+          rewardContribution: 0n,
+          rewardVoteCount: 0,
+          rewardPercentage: 0,
         });
       }
     });
@@ -56,6 +63,35 @@ export default function DelegatorsList({ delegators, timeline }: DelegatorsListP
     }
   });
 
+  // Add reward data for each delegator
+  if (rewardShares) {
+    // First, add any delegators that are in rewardShares but not in timeline
+    for (const address of Object.keys(rewardShares)) {
+      const addrLower = address.toLowerCase();
+      if (!allDelegators.has(addrLower)) {
+        allDelegators.set(addrLower, {
+          address: addrLower,
+          dateStart: null,
+          dateEnd: null,
+          currentBalance: 0n,
+          rewardContribution: 0n,
+          rewardVoteCount: 0,
+          rewardPercentage: 0,
+        });
+      }
+    }
+
+    // Then update all delegators with their reward data
+    allDelegators.forEach((info, address) => {
+      const rewardData = rewardShares[address];
+      if (rewardData) {
+        info.rewardContribution = BigInt(rewardData.totalContribution);
+        info.rewardVoteCount = rewardData.voteCount;
+        info.rewardPercentage = rewardData.rewardPercentage;
+      }
+    });
+  }
+
   const delegatorEntries = Array.from(allDelegators.values())
     .sort((a, b) => {
       let comparison = 0;
@@ -69,6 +105,9 @@ export default function DelegatorsList({ delegators, timeline }: DelegatorsListP
         const dateA = a.dateStart || 0;
         const dateB = b.dateStart || 0;
         comparison = dateA - dateB;
+      } else if (sortColumn === 'rewardPercentage') {
+        // Sort by reward percentage
+        comparison = a.rewardPercentage - b.rewardPercentage;
       }
 
       // Reverse if descending
@@ -87,7 +126,7 @@ export default function DelegatorsList({ delegators, timeline }: DelegatorsListP
   if (delegatorEntries.length === 0) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold mb-4 dark:text-white">Delegates</h2>
+        <h2 className="text-xl font-semibold mb-4 dark:text-white">Delegators</h2>
         <p className="text-gray-500 dark:text-gray-400">No delegators found</p>
       </div>
     );
@@ -120,11 +159,11 @@ export default function DelegatorsList({ delegators, timeline }: DelegatorsListP
 
     if (!dateEnd) {
       // Still active
-      return `${startDate} until Today`;
+      return `from ${startDate} until Today`;
     } else {
       // No longer active
       const endDate = formatDate(dateEnd);
-      return `${startDate} until ${endDate}`;
+      return `from ${startDate} until ${endDate}`;
     }
   };
 
@@ -133,7 +172,7 @@ export default function DelegatorsList({ delegators, timeline }: DelegatorsListP
     return (Number(balance) / Number(totalBalance)) * 100;
   };
 
-  const handleSort = (column: 'dateStart' | 'currentBalance') => {
+  const handleSort = (column: 'dateStart' | 'currentBalance' | 'rewardPercentage') => {
     if (sortColumn === column) {
       // Toggle direction if same column
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -144,7 +183,7 @@ export default function DelegatorsList({ delegators, timeline }: DelegatorsListP
     }
   };
 
-  const SortIcon = ({ column }: { column: 'dateStart' | 'currentBalance' }) => {
+  const SortIcon = ({ column }: { column: 'dateStart' | 'currentBalance' | 'rewardPercentage' }) => {
     if (sortColumn !== column) {
       return (
         <svg className="w-4 h-4 ml-1 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -165,7 +204,7 @@ export default function DelegatorsList({ delegators, timeline }: DelegatorsListP
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-      <h2 className="text-xl font-semibold mb-4 dark:text-white">Delegates</h2>
+      <h2 className="text-xl font-semibold mb-4 dark:text-white">Delegators</h2>
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-900">
@@ -187,12 +226,18 @@ export default function DelegatorsList({ delegators, timeline }: DelegatorsListP
                 onClick={() => handleSort('currentBalance')}
               >
                 <div className="flex items-center">
-                  Amount Currently Delegated
+                  Final Voting Power
                   <SortIcon column="currentBalance" />
                 </div>
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Current %
+              <th
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+                onClick={() => handleSort('rewardPercentage')}
+              >
+                <div className="flex items-center">
+                  Reward Share
+                  <SortIcon column="rewardPercentage" />
+                </div>
               </th>
             </tr>
           </thead>
@@ -230,24 +275,41 @@ export default function DelegatorsList({ delegators, timeline }: DelegatorsListP
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                   {formatDelegationPeriod(info.dateStart, info.dateEnd)}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium dark:text-gray-200">
-                  {formatBalance(info.currentBalance)} ARB
-                </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {info.currentBalance === 0n ? (
-                    <span className="text-sm text-gray-500 dark:text-gray-400">No Delegation</span>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">0 ARB Voting Power</span>
                   ) : (
                     <div className="flex items-center">
-                      <div className="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-2 mr-2">
+                      <div className="w-24 bg-gray-200 dark:bg-gray-700 rounded-full h-2 mr-2">
                         <div
                           className="bg-blue-600 h-2 rounded-full"
                           style={{ width: `${getPercentage(info.currentBalance)}%` }}
                         />
                       </div>
+                      <span className="text-sm font-medium dark:text-gray-200 mr-2">
+                        {formatBalance(info.currentBalance)} ARB
+                      </span>
                       <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {getPercentage(info.currentBalance).toFixed(2)}%
+                        ({getPercentage(info.currentBalance).toFixed(2)}%)
                       </span>
                     </div>
+                  )}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {info.rewardPercentage > 0 ? (
+                    <div className="flex items-center">
+                      <div className="w-24 bg-gray-200 dark:bg-gray-700 rounded-full h-2 mr-2">
+                        <div
+                          className="bg-green-600 h-2 rounded-full"
+                          style={{ width: `${Math.min(info.rewardPercentage, 100)}%` }}
+                        />
+                      </div>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        {info.rewardPercentage.toFixed(6)}%
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-sm text-gray-500 dark:text-gray-400">-</span>
                   )}
                 </td>
               </tr>

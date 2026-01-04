@@ -33,6 +33,12 @@ export interface VotesMetadata {
   onchainTreasuryVotes: number;
 }
 
+export interface DelegatorRewardShare {
+  totalContribution: string;     // wei string for precision
+  voteCount: number;
+  rewardPercentage: number;
+}
+
 export interface VotesData {
   votes: VoteEntry[];
 }

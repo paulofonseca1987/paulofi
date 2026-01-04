@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import TimelineChart from "./components/TimelineChart";
 import DelegatorsList from "./components/DelegatorsList";
 import type {
@@ -11,6 +11,7 @@ import type {
   VoteEntry,
   VotesMetadata,
 } from "@/lib/types";
+import { calculateDelegatorRewardShares } from "@/lib/rewardCalculation";
 
 export default function Home() {
   const [metadata, setMetadata] = useState<MetadataSchema | null>(null);
@@ -30,6 +31,12 @@ export default function Home() {
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
   const [syncProgress, setSyncProgress] = useState<SyncProgress | null>(null);
   const [delegateAddress, setDelegateAddress] = useState<string | null>(null);
+
+  // Calculate reward shares from votes data
+  const rewardShares = useMemo(() => {
+    if (votes.length === 0) return {};
+    return calculateDelegatorRewardShares(votes);
+  }, [votes]);
 
   const fetchData = async () => {
     try {
@@ -295,44 +302,6 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="mb-6 flex gap-4 items-center flex-wrap">
-          <button
-            onClick={handleSync}
-            disabled={syncing}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
-          >
-            {syncing ? "Syncing..." : "Sync Data"}
-          </button>
-          <button
-            onClick={handleSyncVotes}
-            disabled={syncingVotes}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
-          >
-            {syncingVotes ? "Syncing Votes..." : "Sync Votes"}
-          </button>
-          <button
-            onClick={fetchData}
-            disabled={loading}
-            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
-          >
-            {loading ? "Loading..." : "Refresh"}
-          </button>
-
-          {metadata && (
-            <div className="flex items-center gap-2 px-4 py-2 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <p className="text-sm text-green-800 dark:text-green-300">
-                Last sync: {formatTimeSince(metadata.lastSyncTimestamp)}
-              </p>
-            </div>
-          )}
-
-          {syncStatus && (
-            <p className="text-sm text-green-600 dark:text-green-400">
-              {syncStatus}
-            </p>
-          )}
-        </div>
 
         {/* Sync Progress Visualization */}
         {syncProgress && syncProgress.isActive && (
@@ -433,108 +402,60 @@ export default function Home() {
           </div>
         ) : metadata && currentState ? (
           <>
-            {/* Summary Stats */}
-            <div className="mb-8 grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
-                  Total Tokens Owned
-                </h3>
-                <p className="text-2xl font-bold text-green-600">
-                  {(() => {
-                    // Check if delegate address is in the delegators list
-                    const balance =
-                      delegateAddress &&
-                      currentState.delegators[delegateAddress]
-                        ? currentState.delegators[delegateAddress]
-                        : "0";
-                    const formatted = (Number(balance) / 1e18).toLocaleString(
-                      undefined,
-                      {
+            {/* Summary Stats + Timeline Chart */}
+            <div className="mb-8 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+              <div className="flex flex-col md:flex-row gap-4 mb-6">
+                <div className="flex-1 text-center">
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {votesMetadata?.totalVotes || 0} Votes Cast
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    both offchain and onchain until January 1st, 2026
+                  </p>
+                </div>
+                <div className="flex-1 text-center">
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {Object.keys(currentState.delegators).length} Delegators
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    with{" "}
+                    {
+                      Object.values(currentState.delegators).filter(
+                        (balance) => BigInt(balance) > 0n,
+                      ).length
+                    }{" "}
+                    Active Delegators as of January 1st, 2026
+                  </p>
+                </div>
+                <div className="flex-1 text-center">
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {(() => {
+                      const formatted = (
+                        Number(metadata.totalVotingPower) / 1e18
+                      ).toLocaleString(undefined, {
                         minimumFractionDigits: 3,
                         maximumFractionDigits: 3,
-                      },
-                    );
-                    const [integerPart, decimalPart] = formatted.split(".");
-                    return (
-                      <>
-                        {integerPart}
-                        {decimalPart && (
-                          <>
-                            <span>.</span>
-                            <span>{decimalPart}</span>
-                          </>
-                        )}
-                        {" ARB"}
-                      </>
-                    );
-                  })()}
-                </p>
-              </div>
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
-                  Total Active Delegators
-                </h3>
-                <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                  {
-                    Object.values(currentState.delegators).filter(
-                      (balance) => BigInt(balance) > 0n,
-                    ).length
-                  }
-                </p>
-              </div>
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
-                  Total Voting Power
-                </h3>
-                <p className="text-2xl font-bold text-blue-600">
-                  {(() => {
-                    const formatted = (
-                      Number(metadata.totalVotingPower) / 1e18
-                    ).toLocaleString(undefined, {
-                      minimumFractionDigits: 3,
-                      maximumFractionDigits: 3,
-                    });
-                    const [integerPart, decimalPart] = formatted.split(".");
-                    return (
-                      <>
-                        {integerPart}
-                        {decimalPart && (
-                          <>
-                            <span>.</span>
-                            <span>{decimalPart}</span>
-                          </>
-                        )}
-                        {" ARB"}
-                      </>
-                    );
-                  })()}
-                </p>
-              </div>
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
-                  Votes Cast
-                </h3>
-                <p className="text-2xl font-bold">
-                  {votesMetadata?.totalVotes || 0}
-                </p>
-                {votesMetadata && votesMetadata.totalVotes > 0 && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    <span className="inline-block w-2 h-2 rounded-full bg-blue-500 mr-1"></span>
-                    {votesMetadata.snapshotVotes} Snapshot
-                    <span className="inline-block w-2 h-2 rounded-full bg-green-500 mx-1 ml-2"></span>
-                    {votesMetadata.onchainCoreVotes +
-                      votesMetadata.onchainTreasuryVotes}{" "}
-                    Onchain
+                      });
+                      const [integerPart, decimalPart] = formatted.split(".");
+                      return (
+                        <>
+                          {integerPart}
+                          {decimalPart && (
+                            <>
+                              <span>.</span>
+                              <span>{decimalPart}</span>
+                            </>
+                          )}
+                          {" ARB"}
+                        </>
+                      );
+                    })()}
                   </p>
-                )}
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    in Voting Power as of January 1st, 2026
+                  </p>
+                </div>
               </div>
-            </div>
-
-            {/* Timeline Chart */}
-            <div className="mb-8 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-              <h2 className="text-2xl font-semibold mb-4 dark:text-white">
-                Voting Power Timeline
-              </h2>
               {timelineLoading ? (
                 <div className="flex items-center justify-center h-64">
                   <div className="text-center">
@@ -558,6 +479,7 @@ export default function Home() {
               <DelegatorsList
                 delegators={currentState.delegators}
                 timeline={timeline}
+                rewardShares={rewardShares}
               />
             </div>
           </>
