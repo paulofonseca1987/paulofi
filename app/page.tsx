@@ -294,12 +294,9 @@ export default function Home() {
     <main className="min-h-screen p-8 bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2 dark:text-white">
-            Voting Power Tracker
+          <h1 className="text-3xl font-bold dark:text-white">
+            paulofonseca.eth Arbitrum DAO Voting Power
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            ARB Token Delegation on Arbitrum
-          </p>
         </div>
 
 
@@ -404,7 +401,7 @@ export default function Home() {
           <>
             {/* Summary Stats + Timeline Chart */}
             <div className="mb-8 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-              <div className="flex flex-col md:flex-row gap-4 mb-6">
+              <div className="flex flex-col md:flex-row gap-4 py-4 mb-6">
                 <div className="flex-1 text-center">
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">
                     {votesMetadata?.totalVotes || 0} Votes Cast

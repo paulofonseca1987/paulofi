@@ -260,8 +260,11 @@ export default function TimelineChart({
           <div className="bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg w-[352px]">
             <div className="flex items-center gap-2 mb-2 h-12">
               <span
-                className="inline-block w-3 h-3 rotate-45 flex-shrink-0"
-                style={{ backgroundColor: VOTE_COLORS[vote.source] }}
+                className="inline-block w-2 h-2 rotate-45 flex-shrink-0"
+                style={{
+                  backgroundColor: `${VOTE_COLORS[vote.source]}80`,
+                  border: `1px solid ${VOTE_COLORS[vote.source]}`
+                }}
               />
               <span className="font-semibold dark:text-white line-clamp-2">
                 {title}
@@ -437,7 +440,7 @@ export default function TimelineChart({
   // Custom diamond shape for vote markers
   const DiamondShape = (props: any) => {
     const { cx, cy, fill } = props;
-    const size = 8;
+    const size = 6;
     return (
       <polygon
         points={`${cx},${cy - size} ${cx + size},${cy} ${cx},${cy + size} ${cx - size},${cy}`}
@@ -500,9 +503,9 @@ export default function TimelineChart({
   );
 
   return (
-    <div className="w-full flex gap-4" style={{ height: "663px" }}>
+    <div className="w-full flex flex-col lg:flex-row gap-4">
       {/* Chart container */}
-      <div className="flex-1 h-full" ref={containerRef}>
+      <div className="flex-1" style={{ height: "663px" }} ref={containerRef}>
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart data={chartData} margin={{ top: 10, right: 30, left: -26, bottom: 0 }}>
           <defs>
@@ -586,14 +589,14 @@ export default function TimelineChart({
       </div>
 
       {/* Layers Panel */}
-      <div className="w-48 flex-shrink-0 h-full overflow-y-auto">
+      <div className="w-full lg:w-48 flex-shrink-0 lg:h-full overflow-y-auto flex flex-row lg:flex-col flex-wrap lg:flex-nowrap">
           {/* Votes Section */}
           {votes.length > 0 && (
-            <div className="border-b border-gray-200 dark:border-gray-700">
+            <div className="w-1/2 lg:w-full lg:border-b border-gray-200 dark:border-gray-700">
               {/* Section Header */}
               <button
                 onClick={toggleAllVotes}
-                className="w-full px-4 py-2 flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                className="w-full px-4 py-2 flex items-center gap-3 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all cursor-pointer rounded"
               >
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Votes
@@ -619,13 +622,16 @@ export default function TimelineChart({
                     <button
                       key={voteType}
                       onClick={() => toggleVoteType(voteType)}
-                      className={`w-full px-4 py-1.5 flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${
+                      className={`w-full px-4 py-1.5 flex items-center gap-3 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all cursor-pointer rounded ${
                         !isVisible ? "opacity-50" : ""
                       }`}
                     >
                       <span
-                        className="w-3 h-3 rotate-45 flex-shrink-0"
-                        style={{ backgroundColor: VOTE_COLORS[voteType] }}
+                        className="w-2 h-2 rotate-45 flex-shrink-0"
+                        style={{
+                          backgroundColor: `${VOTE_COLORS[voteType]}80`,
+                          border: `1px solid ${VOTE_COLORS[voteType]}`
+                        }}
                       />
                       <span className="text-xs text-gray-600 dark:text-gray-400">
                         {VOTE_LABELS[voteType]}
@@ -646,11 +652,11 @@ export default function TimelineChart({
           )}
 
           {/* Delegators Section */}
-          <div>
+          <div className="w-1/2 lg:w-full">
             {/* Section Header */}
             <button
               onClick={toggleAllDelegators}
-              className="w-full px-4 py-2 flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="w-full px-4 py-2 flex items-center gap-3 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all cursor-pointer rounded"
             >
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Delegators
@@ -677,13 +683,16 @@ export default function TimelineChart({
                   <button
                     key={addr}
                     onClick={() => handleLegendClick({ value: addr })}
-                    className={`w-full px-4 py-1.5 flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${
+                    className={`w-full px-4 py-1.5 flex items-center gap-3 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all cursor-pointer rounded ${
                       !isVisible ? "opacity-50" : ""
                     }`}
                   >
                     <span
-                      className="w-3 h-3 rounded flex-shrink-0"
-                      style={{ backgroundColor: colors[idx % colors.length] }}
+                      className="w-2.5 h-2.5 rounded-sm flex-shrink-0"
+                      style={{
+                        backgroundColor: `${colors[idx % colors.length]}80`,
+                        border: `1px solid ${colors[idx % colors.length]}`
+                      }}
                     />
                     <span className="text-xs text-gray-600 dark:text-gray-400 font-mono truncate">
                       {addr.slice(0, 6)}...{addr.slice(-4)}

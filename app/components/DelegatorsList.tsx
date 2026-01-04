@@ -290,7 +290,7 @@ export default function DelegatorsList({ delegators, timeline, rewardShares }: D
                         {formatBalance(info.currentBalance)} ARB
                       </span>
                       <span className="text-sm text-gray-600 dark:text-gray-400">
-                        ({getPercentage(info.currentBalance).toFixed(2)}%)
+                        {getPercentage(info.currentBalance).toFixed(2)}%
                       </span>
                     </div>
                   )}
@@ -304,8 +304,11 @@ export default function DelegatorsList({ delegators, timeline, rewardShares }: D
                           style={{ width: `${Math.min(info.rewardPercentage, 100)}%` }}
                         />
                       </div>
+                      <span className="text-sm font-bold dark:text-gray-200 mr-2">
+                        {info.rewardVoteCount} Votes
+                      </span>
                       <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {info.rewardPercentage.toFixed(6)}%
+                        {info.rewardPercentage.toFixed(2)}%
                       </span>
                     </div>
                   ) : (
