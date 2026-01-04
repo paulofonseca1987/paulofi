@@ -75,7 +75,7 @@ With the new balance tracking feature, the sync captures:
 - ✅ **Complete voting power history** for all delegators
 - ✅ **Every ARB token transfer** by delegators
 
-## Performance Notes
+ ## Performance Notes
 
 - **Speed**: Processes roughly 10,000 blocks per request
 - **Time**: A full sync typically takes 2-3 hours (~167M blocks)

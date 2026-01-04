@@ -1,6 +1,11 @@
 {
   "delegateAddress": "0xE594469fDe6AE29943a64f81d95c20F5F8eB2e04",
   "tokenAddress": "0x912CE59144191C1204E64559FE8253a0e49E6548",
-  "chainId": 42161
+  "chainId": 42161,
+  "snapshotSpace": "arbitrumfoundation.eth",
+  "governors": {
+    "core": "0x789fC99093B09aD01C34DC7251D0C89ce743e5a4",
+    "treasury": "0xf07DeD9dC292157749B6Fd268E37DF6EA38395B9"
+  }
 }
 

@@ -682,3 +682,148 @@ export async function clearSyncProgress(): Promise<void> {
     }
   }
 }
+
+// ============================================================================
+// TIMELINE TRUNCATION
+// ============================================================================
+
+/**
+ * Delete a blob/file
+ */
+async function safeDeleteBlob(blobName: string): Promise<boolean> {
+  if (USE_LOCAL_STORAGE) {
+    try {
+      const filePath = join(LOCAL_DATA_DIR, blobName);
+      if (existsSync(filePath)) {
+        unlinkSync(filePath);
+      }
+      return true;
+    } catch (error) {
+      console.error(`Error deleting local file ${blobName}:`, error);
+      return false;
+    }
+  } else {
+    try {
+      await del(blobName);
+      return true;
+    } catch (error: any) {
+      if (error.status !== 404 && error.statusCode !== 404) {
+        console.error(`Error deleting blob ${blobName}:`, error);
+        return false;
+      }
+      return true; // Already deleted
+    }
+  }
+}
+
+/**
+ * Truncate timeline data after a specific block number
+ * Removes all entries with blockNumber > maxBlock
+ */
+export async function truncateTimelineAfterBlock(maxBlock: number): Promise<{
+  success: boolean;
+  entriesRemoved: number;
+  partitionsRemoved: number;
+  lastBlockNumber: number;
+}> {
+  console.log(`[Truncate] Truncating timeline data after block ${maxBlock}...`);
+
+  const index = await getTimelineIndex();
+  if (!index || index.partitions.length === 0) {
+    return { success: true, entriesRemoved: 0, partitionsRemoved: 0, lastBlockNumber: 0 };
+  }
+
+  const originalEntryCount = index.totalEntries;
+  let entriesRemoved = 0;
+  let partitionsRemoved = 0;
+  let lastBlockNumber = 0;
+
+  // Find partitions to keep (those that have entries <= maxBlock)
+  const partitionsToKeep: TimelinePartitionInfo[] = [];
+  const partitionsToDelete: TimelinePartitionInfo[] = [];
+
+  for (const partition of index.partitions) {
+    if (partition.startBlock > maxBlock) {
+      // Entire partition is after maxBlock, delete it
+      partitionsToDelete.push(partition);
+    } else {
+      partitionsToKeep.push(partition);
+    }
+  }
+
+  // Process the last partition that we're keeping (may need trimming)
+  if (partitionsToKeep.length > 0) {
+    const lastPartition = partitionsToKeep[partitionsToKeep.length - 1];
+
+    if (lastPartition.endBlock > maxBlock) {
+      // Need to trim entries from this partition
+      const partition = await getTimelinePartition(lastPartition.id);
+      if (partition) {
+        const originalLength = partition.entries.length;
+        partition.entries = partition.entries.filter(e => e.blockNumber <= maxBlock);
+        const trimmedCount = originalLength - partition.entries.length;
+        entriesRemoved += trimmedCount;
+
+        if (partition.entries.length > 0) {
+          // Update partition with trimmed entries
+          await storeTimelinePartition(lastPartition.id, partition);
+          lastPartition.entryCount = partition.entries.length;
+          lastPartition.endBlock = partition.entries[partition.entries.length - 1].blockNumber;
+          lastBlockNumber = lastPartition.endBlock;
+        } else {
+          // Partition is now empty, delete it
+          partitionsToDelete.push(lastPartition);
+          partitionsToKeep.pop();
+        }
+      }
+    } else {
+      lastBlockNumber = lastPartition.endBlock;
+    }
+  }
+
+  // Delete orphaned partitions
+  for (const partition of partitionsToDelete) {
+    const blobName = `data-timeline-entries-${partition.id}.json`;
+    await safeDeleteBlob(blobName);
+    entriesRemoved += partition.entryCount;
+    partitionsRemoved++;
+    console.log(`[Truncate] Deleted partition ${partition.id} (${partition.entryCount} entries)`);
+  }
+
+  // Update index
+  index.partitions = partitionsToKeep;
+  index.totalEntries = index.partitions.reduce((sum, p) => sum + p.entryCount, 0);
+  await storeTimelineIndex(index);
+
+  // Update metadata
+  const metadata = await getMetadata();
+  if (metadata) {
+    metadata.lastSyncedBlock = maxBlock;
+    metadata.totalTimelineEntries = index.totalEntries;
+    metadata.timelinePartitions = index.partitions.length;
+    await storeMetadata(metadata);
+  }
+
+  // Update current state
+  const currentState = await getCurrentState();
+  if (currentState) {
+    currentState.asOfBlock = maxBlock;
+    await storeCurrentState(currentState);
+  }
+
+  // Clear cache
+  clearCache();
+
+  console.log(`[Truncate] Complete:`);
+  console.log(`  - Entries removed: ${entriesRemoved}`);
+  console.log(`  - Partitions removed: ${partitionsRemoved}`);
+  console.log(`  - New total entries: ${index.totalEntries}`);
+  console.log(`  - Last block number: ${lastBlockNumber}`);
+
+  return {
+    success: true,
+    entriesRemoved,
+    partitionsRemoved,
+    lastBlockNumber
+  };
+}

@@ -152,12 +152,14 @@ export async function POST(request: NextRequest) {
     const metadata = await getMetadata();
     const currentState = await getCurrentState();
 
-    // Full sync from 250M to current block
-    const START_BLOCK = 250000000;
+    // Full sync from ARB token deployment to current block
+    const START_BLOCK = 248786699;
+    const MAX_BLOCK = 416593978n; // Hard cap - do not sync beyond this block
     const fromBlock = metadata
       ? BigInt(metadata.lastSyncedBlock + 1)
       : BigInt(START_BLOCK);
-    const toBlock = BigInt(await getCurrentBlockNumber(eventClient));
+    const currentBlock = BigInt(await getCurrentBlockNumber(eventClient));
+    const toBlock = currentBlock > MAX_BLOCK ? MAX_BLOCK : currentBlock;
 
     if (fromBlock > toBlock) {
       await releaseSyncLock();

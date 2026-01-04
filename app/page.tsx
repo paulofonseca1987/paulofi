@@ -1,18 +1,32 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import TimelineChart from './components/TimelineChart';
-import DelegatorsList from './components/DelegatorsList';
-import type { MetadataSchema, CurrentStateSchema, TimelineEntry, SyncProgress } from '@/lib/types';
+import { useState, useEffect } from "react";
+import TimelineChart from "./components/TimelineChart";
+import DelegatorsList from "./components/DelegatorsList";
+import type {
+  MetadataSchema,
+  CurrentStateSchema,
+  TimelineEntry,
+  SyncProgress,
+  VoteEntry,
+  VotesMetadata,
+} from "@/lib/types";
 
 export default function Home() {
   const [metadata, setMetadata] = useState<MetadataSchema | null>(null);
-  const [currentState, setCurrentState] = useState<CurrentStateSchema | null>(null);
+  const [currentState, setCurrentState] = useState<CurrentStateSchema | null>(
+    null,
+  );
   const [timeline, setTimeline] = useState<TimelineEntry[]>([]);
+  const [votes, setVotes] = useState<VoteEntry[]>([]);
+  const [votesMetadata, setVotesMetadata] = useState<VotesMetadata | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
   const [timelineLoading, setTimelineLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
+  const [syncingVotes, setSyncingVotes] = useState(false);
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
   const [syncProgress, setSyncProgress] = useState<SyncProgress | null>(null);
   const [delegateAddress, setDelegateAddress] = useState<string | null>(null);
@@ -24,26 +38,26 @@ export default function Home() {
 
       // Load critical data first (metadata + current state) - fast
       const [metadataRes, currentRes] = await Promise.all([
-        fetch('/api/data?endpoint=metadata'),
-        fetch('/api/data?endpoint=current')
+        fetch("/api/data?endpoint=metadata"),
+        fetch("/api/data?endpoint=current"),
       ]);
 
       if (!metadataRes.ok || !currentRes.ok) {
         if (metadataRes.status === 404 || currentRes.status === 404) {
           // No data yet, but don't show error if sync is active
-          const progressRes = await fetch('/api/sync/progress');
+          const progressRes = await fetch("/api/sync/progress");
           if (progressRes.ok) {
             const progress = await progressRes.json();
             if (!progress.isActive) {
-              setError('No data found. Please sync first.');
+              setError("No data found. Please sync first.");
             }
           } else {
-            setError('No data found. Please sync first.');
+            setError("No data found. Please sync first.");
           }
           setLoading(false);
           return;
         }
-        throw new Error('Failed to fetch data');
+        throw new Error("Failed to fetch data");
       }
 
       const metadataData = await metadataRes.json();
@@ -55,7 +69,7 @@ export default function Home() {
 
       // Load timeline in background - slower
       setTimelineLoading(true);
-      const timelineRes = await fetch('/api/data?endpoint=timeline');
+      const timelineRes = await fetch("/api/data?endpoint=timeline");
 
       if (timelineRes.ok) {
         const timelineData = await timelineRes.json();
@@ -63,38 +77,90 @@ export default function Home() {
       }
       setTimelineLoading(false);
 
+      // Load votes data
+      try {
+        const [votesRes, votesMetaRes] = await Promise.all([
+          fetch("/api/votes?endpoint=votes"),
+          fetch("/api/votes?endpoint=metadata"),
+        ]);
+
+        if (votesRes.ok) {
+          const votesData = await votesRes.json();
+          setVotes(votesData.votes || []);
+        }
+
+        if (votesMetaRes.ok) {
+          const votesMeta = await votesMetaRes.json();
+          setVotesMetadata(votesMeta);
+        }
+      } catch (err) {
+        console.warn("Failed to fetch votes:", err);
+      }
     } catch (err: any) {
-      setError(err.message || 'Failed to load data');
+      setError(err.message || "Failed to load data");
       setLoading(false);
       setTimelineLoading(false);
+    }
+  };
+
+  const handleSyncVotes = async () => {
+    try {
+      setSyncingVotes(true);
+      setSyncStatus("Syncing votes...");
+
+      const response = await fetch("/api/votes/sync", { method: "POST" });
+      const result = await response.json();
+
+      if (response.ok) {
+        setSyncStatus(
+          `Votes sync completed! Snapshot: ${result.snapshotVotes}, Core: ${result.onchainCoreVotes}, Treasury: ${result.onchainTreasuryVotes}`,
+        );
+        // Refresh votes data
+        const votesRes = await fetch("/api/votes?endpoint=votes");
+        if (votesRes.ok) {
+          const votesData = await votesRes.json();
+          setVotes(votesData.votes || []);
+        }
+        const votesMetaRes = await fetch("/api/votes?endpoint=metadata");
+        if (votesMetaRes.ok) {
+          const votesMeta = await votesMetaRes.json();
+          setVotesMetadata(votesMeta);
+        }
+      } else {
+        throw new Error(result.error || "Votes sync failed");
+      }
+    } catch (err: any) {
+      setError(err.message || "Votes sync failed");
+      setSyncStatus(null);
+    } finally {
+      setSyncingVotes(false);
     }
   };
 
   const handleSync = async () => {
     try {
       setSyncing(true);
-      setSyncStatus('Starting sync...');
+      setSyncStatus("Starting sync...");
 
       // Start the sync request (non-blocking)
-      fetch('/api/sync', { method: 'POST' })
+      fetch("/api/sync", { method: "POST" })
         .then(async (response) => {
           const result = await response.json();
           if (response.ok) {
             setSyncStatus(
-              `Sync completed! Processed ${result.eventsProcessed} events. Timeline entries: ${result.timelineEntries}, Delegators: ${result.currentDelegators}`
+              `Sync completed! Processed ${result.eventsProcessed} events. Timeline entries: ${result.timelineEntries}, Delegators: ${result.currentDelegators}`,
             );
           } else {
-            throw new Error(result.error || 'Sync failed');
+            throw new Error(result.error || "Sync failed");
           }
         })
         .catch((err: any) => {
-          setError(err.message || 'Sync failed');
+          setError(err.message || "Sync failed");
           setSyncStatus(null);
           setSyncing(false);
         });
-
     } catch (err: any) {
-      setError(err.message || 'Sync failed');
+      setError(err.message || "Sync failed");
       setSyncStatus(null);
       setSyncing(false);
     }
@@ -128,7 +194,7 @@ export default function Home() {
 
   const fetchSyncProgress = async () => {
     try {
-      const response = await fetch('/api/sync/progress');
+      const response = await fetch("/api/sync/progress");
       if (response.ok) {
         const progress = await response.json();
         setSyncProgress(progress);
@@ -145,7 +211,7 @@ export default function Home() {
         }
       }
     } catch (err) {
-      console.warn('Failed to fetch sync progress:', err);
+      console.warn("Failed to fetch sync progress:", err);
     }
   };
 
@@ -153,13 +219,13 @@ export default function Home() {
     // Fetch config to get delegate address
     const fetchConfig = async () => {
       try {
-        const response = await fetch('/api/config');
+        const response = await fetch("/api/config");
         if (response.ok) {
           const config = await response.json();
           setDelegateAddress(config.delegateAddress);
         }
       } catch (err) {
-        console.warn('Failed to fetch config:', err);
+        console.warn("Failed to fetch config:", err);
       }
     };
 
@@ -174,7 +240,7 @@ export default function Home() {
     // Auto-sync: Check if data is stale and trigger background sync
     const checkAndAutoSync = async () => {
       try {
-        const metadataRes = await fetch('/api/data?endpoint=metadata');
+        const metadataRes = await fetch("/api/data?endpoint=metadata");
         if (metadataRes.ok) {
           const metadata = await metadataRes.json();
           const now = Date.now();
@@ -182,15 +248,18 @@ export default function Home() {
 
           // If data is older than 1 hour, trigger background sync
           if (now - metadata.lastSyncTimestamp > oneHour) {
-            console.log('Data is stale, triggering background sync...');
-            fetch('/api/sync/background', {
-              method: 'POST',
-              headers: { 'X-Sync-Token': process.env.NEXT_PUBLIC_SYNC_SECRET || 'default-secret' }
-            }).catch(err => console.warn('Background sync failed:', err));
+            console.log("Data is stale, triggering background sync...");
+            fetch("/api/sync/background", {
+              method: "POST",
+              headers: {
+                "X-Sync-Token":
+                  process.env.NEXT_PUBLIC_SYNC_SECRET || "default-secret",
+              },
+            }).catch((err) => console.warn("Background sync failed:", err));
           }
         }
       } catch (err) {
-        console.warn('Auto-sync check failed:', err);
+        console.warn("Auto-sync check failed:", err);
       }
     };
 
@@ -218,8 +287,12 @@ export default function Home() {
     <main className="min-h-screen p-8 bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2 dark:text-white">Voting Power Tracker</h1>
-          <p className="text-gray-600 dark:text-gray-400">ARB Token Delegation on Arbitrum</p>
+          <h1 className="text-3xl font-bold mb-2 dark:text-white">
+            Voting Power Tracker
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            ARB Token Delegation on Arbitrum
+          </p>
         </div>
 
         <div className="mb-6 flex gap-4 items-center flex-wrap">
@@ -228,14 +301,21 @@ export default function Home() {
             disabled={syncing}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
           >
-            {syncing ? 'Syncing...' : 'Sync Data'}
+            {syncing ? "Syncing..." : "Sync Data"}
+          </button>
+          <button
+            onClick={handleSyncVotes}
+            disabled={syncingVotes}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
+          >
+            {syncingVotes ? "Syncing Votes..." : "Sync Votes"}
           </button>
           <button
             onClick={fetchData}
             disabled={loading}
             className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
           >
-            {loading ? 'Loading...' : 'Refresh'}
+            {loading ? "Loading..." : "Refresh"}
           </button>
 
           {metadata && (
@@ -248,7 +328,9 @@ export default function Home() {
           )}
 
           {syncStatus && (
-            <p className="text-sm text-green-600 dark:text-green-400">{syncStatus}</p>
+            <p className="text-sm text-green-600 dark:text-green-400">
+              {syncStatus}
+            </p>
           )}
         </div>
 
@@ -257,7 +339,9 @@ export default function Home() {
           <div className="mb-6 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div className="mb-4">
               <div className="flex justify-between items-center mb-2">
-                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Syncing Blockchain Data</h3>
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                  Syncing Blockchain Data
+                </h3>
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
                     {syncProgress.percentComplete.toFixed(1)}%
@@ -265,7 +349,8 @@ export default function Home() {
                   <span className="text-sm text-gray-600 dark:text-gray-400">
                     {syncProgress.estimatedTimeRemaining
                       ? formatDuration(syncProgress.estimatedTimeRemaining)
-                      : 'Calculating...'} remaining
+                      : "Calculating..."}{" "}
+                    remaining
                   </span>
                 </div>
               </div>
@@ -284,23 +369,39 @@ export default function Home() {
             {/* Progress Details */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div>
-                <p className="text-gray-600 dark:text-gray-400 mb-1">Current Block</p>
-                <p className="font-semibold text-gray-900 dark:text-gray-100">{syncProgress.currentBlock.toLocaleString()}</p>
+                <p className="text-gray-600 dark:text-gray-400 mb-1">
+                  Current Block
+                </p>
+                <p className="font-semibold text-gray-900 dark:text-gray-100">
+                  {syncProgress.currentBlock.toLocaleString()}
+                </p>
               </div>
               {metadata && (
                 <div>
-                  <p className="text-gray-600 dark:text-gray-400 mb-1">Last Checkpoint Block</p>
-                  <p className="font-semibold text-gray-900 dark:text-gray-100">{metadata.lastSyncedBlock.toLocaleString()}</p>
+                  <p className="text-gray-600 dark:text-gray-400 mb-1">
+                    Last Checkpoint Block
+                  </p>
+                  <p className="font-semibold text-gray-900 dark:text-gray-100">
+                    {metadata.lastSyncedBlock.toLocaleString()}
+                  </p>
                 </div>
               )}
               <div>
-                <p className="text-gray-600 dark:text-gray-400 mb-1">Events Processed</p>
-                <p className="font-semibold text-gray-900 dark:text-gray-100">{syncProgress.eventsProcessed.toLocaleString()}</p>
+                <p className="text-gray-600 dark:text-gray-400 mb-1">
+                  Events Processed
+                </p>
+                <p className="font-semibold text-gray-900 dark:text-gray-100">
+                  {syncProgress.eventsProcessed.toLocaleString()}
+                </p>
               </div>
               {metadata && (
                 <div>
-                  <p className="text-gray-600 dark:text-gray-400 mb-1">Timeline Entries</p>
-                  <p className="font-semibold text-gray-900 dark:text-gray-100">{metadata.totalTimelineEntries.toLocaleString()}</p>
+                  <p className="text-gray-600 dark:text-gray-400 mb-1">
+                    Timeline Entries
+                  </p>
+                  <p className="font-semibold text-gray-900 dark:text-gray-100">
+                    {metadata.totalTimelineEntries.toLocaleString()}
+                  </p>
                 </div>
               )}
             </div>
@@ -308,7 +409,8 @@ export default function Home() {
             {/* Block Range Info */}
             <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Processing blocks {syncProgress.startBlock.toLocaleString()} to {syncProgress.targetBlock.toLocaleString()}
+                Processing blocks {syncProgress.startBlock.toLocaleString()} to{" "}
+                {syncProgress.targetBlock.toLocaleString()}
               </p>
             </div>
           </div>
@@ -324,26 +426,35 @@ export default function Home() {
           <div className="flex items-center justify-center h-96">
             <div className="text-center">
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-              <p className="text-gray-500 dark:text-gray-400">Loading data...</p>
+              <p className="text-gray-500 dark:text-gray-400">
+                Loading data...
+              </p>
             </div>
           </div>
         ) : metadata && currentState ? (
           <>
             {/* Summary Stats */}
-            <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="mb-8 grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Total Tokens Owned</h3>
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                  Total Tokens Owned
+                </h3>
                 <p className="text-2xl font-bold text-green-600">
                   {(() => {
                     // Check if delegate address is in the delegators list
-                    const balance = delegateAddress && currentState.delegators[delegateAddress]
-                      ? currentState.delegators[delegateAddress]
-                      : '0';
-                    const formatted = (Number(balance) / 1e18).toLocaleString(undefined, {
-                      minimumFractionDigits: 3,
-                      maximumFractionDigits: 3
-                    });
-                    const [integerPart, decimalPart] = formatted.split('.');
+                    const balance =
+                      delegateAddress &&
+                      currentState.delegators[delegateAddress]
+                        ? currentState.delegators[delegateAddress]
+                        : "0";
+                    const formatted = (Number(balance) / 1e18).toLocaleString(
+                      undefined,
+                      {
+                        minimumFractionDigits: 3,
+                        maximumFractionDigits: 3,
+                      },
+                    );
+                    const [integerPart, decimalPart] = formatted.split(".");
                     return (
                       <>
                         {integerPart}
@@ -353,27 +464,37 @@ export default function Home() {
                             <span>{decimalPart}</span>
                           </>
                         )}
-                        {' ARB'}
+                        {" ARB"}
                       </>
                     );
                   })()}
                 </p>
               </div>
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Total Active Delegators</h3>
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                  Total Active Delegators
+                </h3>
                 <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                  {Object.values(currentState.delegators).filter(balance => BigInt(balance) > 0n).length}
+                  {
+                    Object.values(currentState.delegators).filter(
+                      (balance) => BigInt(balance) > 0n,
+                    ).length
+                  }
                 </p>
               </div>
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Total Voting Power</h3>
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                  Total Voting Power
+                </h3>
                 <p className="text-2xl font-bold text-blue-600">
                   {(() => {
-                    const formatted = (Number(metadata.totalVotingPower) / 1e18).toLocaleString(undefined, {
+                    const formatted = (
+                      Number(metadata.totalVotingPower) / 1e18
+                    ).toLocaleString(undefined, {
                       minimumFractionDigits: 3,
-                      maximumFractionDigits: 3
+                      maximumFractionDigits: 3,
                     });
-                    const [integerPart, decimalPart] = formatted.split('.');
+                    const [integerPart, decimalPart] = formatted.split(".");
                     return (
                       <>
                         {integerPart}
@@ -383,39 +504,87 @@ export default function Home() {
                             <span>{decimalPart}</span>
                           </>
                         )}
-                        {' ARB'}
+                        {" ARB"}
                       </>
                     );
                   })()}
                 </p>
+              </div>
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                  Votes Cast
+                </h3>
+                <p className="text-2xl font-bold text-orange-600">
+                  {votesMetadata?.totalVotes || 0}
+                </p>
+                {votesMetadata && votesMetadata.totalVotes > 0 && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    <span className="inline-block w-2 h-2 rounded-full bg-blue-500 mr-1"></span>
+                    {votesMetadata.snapshotVotes} Snapshot
+                    <span className="inline-block w-2 h-2 rounded-full bg-green-500 mx-1 ml-2"></span>
+                    {votesMetadata.onchainCoreVotes +
+                      votesMetadata.onchainTreasuryVotes}{" "}
+                    Onchain
+                  </p>
+                )}
               </div>
             </div>
 
             {/* Timeline Chart */}
             <div className="mb-8 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-              <h2 className="text-2xl font-semibold mb-4 dark:text-white">Voting Power Timeline</h2>
+              <h2 className="text-2xl font-semibold mb-4 dark:text-white">
+                Voting Power Timeline
+              </h2>
               {timelineLoading ? (
                 <div className="flex items-center justify-center h-64">
                   <div className="text-center">
                     <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Loading timeline data...</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Loading timeline data...
+                    </p>
                   </div>
                 </div>
               ) : timeline.length > 0 ? (
-                <TimelineChart timeline={timeline} />
+                <TimelineChart timeline={timeline} votes={votes} />
               ) : (
-                <p className="text-gray-500 dark:text-gray-400">No timeline data available.</p>
+                <p className="text-gray-500 dark:text-gray-400">
+                  No timeline data available.
+                </p>
+              )}
+              {votes.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center gap-4 text-xs text-gray-600 dark:text-gray-400">
+                    <span className="font-medium">Vote Markers:</span>
+                    <span className="flex items-center gap-1">
+                      <span className="w-3 h-3 rotate-45 bg-orange-500"></span>
+                      Snapshot
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="w-3 h-3 rotate-45 bg-blue-500"></span>
+                      Treasury Governor
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="w-3 h-3 rotate-45 bg-purple-500"></span>
+                      Core Governor
+                    </span>
+                  </div>
+                </div>
               )}
             </div>
 
             {/* Delegators List */}
             <div className="mb-8">
-              <DelegatorsList delegators={currentState.delegators} timeline={timeline} />
+              <DelegatorsList
+                delegators={currentState.delegators}
+                timeline={timeline}
+              />
             </div>
           </>
         ) : (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <p className="text-gray-500 dark:text-gray-400">No data available. Click "Sync Data" to start tracking.</p>
+            <p className="text-gray-500 dark:text-gray-400">
+              No data available. Click &quot;Sync Data&quot; to start tracking.
+            </p>
           </div>
         )}
       </div>

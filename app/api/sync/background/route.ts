@@ -160,22 +160,24 @@ export async function POST(request: NextRequest) {
     const metadata = await getMetadata();
     const currentState = await getCurrentState();
 
-    // Full sync from 250M to current block (or custom range)
-    const START_BLOCK = 250000000;
+    // Full sync from ARB token deployment to current block (or custom range)
+    const START_BLOCK = 248786699;
+    const MAX_BLOCK = 416593978n; // Hard cap - do not sync beyond this block
     let fromBlock: bigint;
     let toBlock: bigint;
 
     if (customFromBlock !== null && customToBlock !== null) {
       // Use custom range
       fromBlock = customFromBlock;
-      toBlock = customToBlock;
+      toBlock = customToBlock > MAX_BLOCK ? MAX_BLOCK : customToBlock;
       console.log(`[Custom Sync] Syncing custom range: ${fromBlock} to ${toBlock}`);
     } else {
       // Use normal sync logic
       fromBlock = metadata
         ? BigInt(metadata.lastSyncedBlock + 1)
         : BigInt(START_BLOCK);
-      toBlock = BigInt(await getCurrentBlockNumber(eventClient));
+      const currentBlock = BigInt(await getCurrentBlockNumber(eventClient));
+      toBlock = currentBlock > MAX_BLOCK ? MAX_BLOCK : currentBlock;
     }
 
     if (fromBlock > toBlock) {

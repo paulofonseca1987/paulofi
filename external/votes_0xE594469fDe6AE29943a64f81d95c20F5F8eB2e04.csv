@@ -82,3 +82,6 @@ proposal_id,proposal_type,ARB_snapshot_block,ETH_snapshot_block
 0xffe9bb38228fdaf3d121140856fd2d51c2ca7f8e0d1021c07e791cebb541129a,offchain,252743759,""
 0xd05fe5e629072098183d454fb5084715a19d5b3285af2b87c3dad7b61d614954,offchain,252873424,""
 0x785e8ed145d34ab4c9fea725cf0ce31267f90bc2ed4423e6e718c5e736e84c06,offchain,252556661,""
+
+
+32 onchain votes, of which 20 are non-constitutional and 12 are constitutional

@@ -2,6 +2,39 @@ export interface Config {
   delegateAddress: string;
   tokenAddress: string;
   chainId: number;
+  snapshotSpace?: string;
+  governors?: {
+    core: string;
+    treasury: string;
+  };
+}
+
+// Vote types
+export type VoteSource = 'snapshot' | 'onchain-core' | 'onchain-treasury';
+
+export interface VoteEntry {
+  proposalId: string;
+  source: VoteSource;
+  votingPower: string;              // wei
+  snapshotTimestamp: number;        // when VP was snapshotted
+  snapshotBlockNumber: number;
+  voteTimestamp: number;            // when vote was cast
+  voteBlockNumber?: number;
+  choice: number | number[];
+  proposalTitle?: string;
+  delegatorBreakdown: Record<string, string>;  // from timeline at snapshot
+}
+
+export interface VotesMetadata {
+  lastSyncTimestamp: number;
+  totalVotes: number;
+  snapshotVotes: number;
+  onchainCoreVotes: number;
+  onchainTreasuryVotes: number;
+}
+
+export interface VotesData {
+  votes: VoteEntry[];
 }
 
 export interface TimelineEntry {
