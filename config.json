@@ -4,8 +4,8 @@
   "chainId": 42161,
   "snapshotSpace": "arbitrumfoundation.eth",
   "governors": {
-    "core": "0x789fC99093B09aD01C34DC7251D0C89ce743e5a4",
-    "treasury": "0xf07DeD9dC292157749B6Fd268E37DF6EA38395B9"
+    "core": "0xf07DeD9dC292157749B6Fd268E37DF6EA38395B9",
+    "treasury": "0x789fC99093B09aD01C34DC7251D0C89ce743e5a4"
   }
 }
 

@@ -23,9 +23,18 @@ interface TimelineChartProps {
 // Vote source colors
 const VOTE_COLORS = {
   snapshot: "#f97316", // orange
-  "onchain-core": "#8b5cf6", // purple (constitutional)
-  "onchain-treasury": "#3b82f6", // blue (non-constitutional)
+  "onchain-core": "#3b82f6", // blue (core)
+  "onchain-treasury": "#22c55e", // green (treasury)
 };
+
+// Vote type labels for display
+const VOTE_LABELS = {
+  snapshot: "Snapshot",
+  "onchain-core": "Arbitrum Core",
+  "onchain-treasury": "Arbitrum Treasury",
+};
+
+type VoteSource = keyof typeof VOTE_COLORS;
 
 export default function TimelineChart({
   timeline,
@@ -34,8 +43,24 @@ export default function TimelineChart({
   const [hiddenDelegates, setHiddenDelegates] = useState<Set<string>>(
     new Set(),
   );
+  const [hiddenVoteTypes, setHiddenVoteTypes] = useState<Set<VoteSource>>(
+    new Set(),
+  );
   const [isDark, setIsDark] = useState(false);
   const [hoveredVote, setHoveredVote] = useState<VoteEntry | null>(null);
+
+  // Toggle vote type visibility
+  const toggleVoteType = (voteType: VoteSource) => {
+    setHiddenVoteTypes((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(voteType)) {
+        newSet.delete(voteType);
+      } else {
+        newSet.add(voteType);
+      }
+      return newSet;
+    });
+  };
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
@@ -131,29 +156,31 @@ export default function TimelineChart({
     }
   });
 
-  // Prepare vote data for scatter plot
-  const voteData = votes.map((vote) => {
-    // Find the total voting power at the vote's snapshot timestamp
-    let votingPowerAtSnapshot = 0;
-    for (let i = chartData.length - 1; i >= 0; i--) {
-      if (chartData[i].timestamp <= vote.snapshotTimestamp) {
-        // Sum visible delegates
-        delegatorAddresses.forEach((addr) => {
-          if (!hiddenDelegates.has(addr)) {
-            votingPowerAtSnapshot += chartData[i][addr] || 0;
-          }
-        });
-        break;
+  // Prepare vote data for scatter plot (filtered by hidden vote types)
+  const voteData = votes
+    .filter((vote) => !hiddenVoteTypes.has(vote.source as VoteSource))
+    .map((vote) => {
+      // Find the total voting power at the vote's snapshot timestamp
+      let votingPowerAtSnapshot = 0;
+      for (let i = chartData.length - 1; i >= 0; i--) {
+        if (chartData[i].timestamp <= vote.snapshotTimestamp) {
+          // Sum visible delegates
+          delegatorAddresses.forEach((addr) => {
+            if (!hiddenDelegates.has(addr)) {
+              votingPowerAtSnapshot += chartData[i][addr] || 0;
+            }
+          });
+          break;
+        }
       }
-    }
 
-    return {
-      timestamp: vote.snapshotTimestamp,
-      votingPower: parseFloat(vote.votingPower) / 1e18,
-      vote,
-      fill: VOTE_COLORS[vote.source],
-    };
-  });
+      return {
+        timestamp: vote.snapshotTimestamp,
+        votingPower: parseFloat(vote.votingPower) / 1e18,
+        vote,
+        fill: VOTE_COLORS[vote.source],
+      };
+    });
 
   // Calculate dynamic Y-axis scale based on visible data
   const maxTotal = Math.max(
@@ -211,11 +238,7 @@ export default function TimelineChart({
       const votePayload = payload.find((p: any) => p.dataKey === "votingPower");
       if (votePayload && votePayload.payload.vote) {
         const vote = votePayload.payload.vote as VoteEntry;
-        const sourceLabels = {
-          snapshot: "Snapshot",
-          "onchain-core": "Core Governor",
-          "onchain-treasury": "Treasury Governor",
-        };
+        const sourceLabels = VOTE_LABELS;
 
         // Calculate total and breakdown
         let totalVP = BigInt(0);
@@ -225,11 +248,18 @@ export default function TimelineChart({
           totalVP += bal;
           breakdown.push({ addr, balance: bal });
         }
-        // Sort by balance descending
+        // Sort by balance descending and filter out zero balances (must have > 1 wei)
         breakdown.sort((a, b) => (b.balance > a.balance ? 1 : -1));
+        const nonZeroBreakdown = breakdown.filter((d) => d.balance > BigInt(1));
+
+        const truncatedTitle = vote.proposalTitle
+          ? vote.proposalTitle.length > 38
+            ? vote.proposalTitle.slice(0, 38) + "..."
+            : vote.proposalTitle
+          : null;
 
         return (
-          <div className="bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-w-sm">
+          <div className="bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg w-[352px]">
             <div className="flex items-center gap-2 mb-2">
               <span
                 className="inline-block w-3 h-3 rounded-full"
@@ -239,9 +269,9 @@ export default function TimelineChart({
                 {sourceLabels[vote.source]}
               </span>
             </div>
-            {vote.proposalTitle && (
-              <p className="text-sm text-gray-700 dark:text-gray-300 mb-2 line-clamp-2">
-                {vote.proposalTitle}
+            {truncatedTitle && (
+              <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+                {truncatedTitle}
               </p>
             )}
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
@@ -263,8 +293,8 @@ export default function TimelineChart({
               <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
                 Delegator Breakdown:
               </p>
-              <div className="space-y-1 max-h-32 overflow-y-auto">
-                {breakdown.slice(0, 10).map(({ addr, balance }) => {
+              <div className="space-y-1">
+                {nonZeroBreakdown.map(({ addr, balance }) => {
                   const percentage =
                     totalVP > BigInt(0)
                       ? (Number(balance) / Number(totalVP)) * 100
@@ -272,28 +302,24 @@ export default function TimelineChart({
                   return (
                     <p
                       key={addr}
-                      className="text-xs dark:text-gray-300 flex justify-between"
+                      className="text-xs dark:text-gray-300 flex gap-2"
                     >
-                      <span>
+                      <span className="flex-shrink-0">
                         {addr.slice(0, 6)}...{addr.slice(-4)}
                       </span>
-                      <span>
+                      <span className="flex-grow text-right">
                         {(Number(balance) / 1e18).toLocaleString(undefined, {
-                          maximumFractionDigits: 0,
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
                         })}{" "}
                         ARB
-                        <span className="text-gray-500 ml-1">
-                          ({percentage.toFixed(1)}%)
-                        </span>
+                      </span>
+                      <span className="text-gray-500 text-right w-14 flex-shrink-0">
+                        {percentage.toFixed(2)}%
                       </span>
                     </p>
                   );
                 })}
-                {breakdown.length > 10 && (
-                  <p className="text-xs text-gray-500">
-                    +{breakdown.length - 10} more
-                  </p>
-                )}
               </div>
             </div>
           </div>
@@ -404,8 +430,10 @@ export default function TimelineChart({
       <polygon
         points={`${cx},${cy - size} ${cx + size},${cy} ${cx},${cy + size} ${cx - size},${cy}`}
         fill={fill}
-        stroke={isDark ? "#1f2937" : "#ffffff"}
-        strokeWidth={2}
+        fillOpacity={0.5}
+        stroke={fill}
+        strokeWidth={1}
+        style={{ transition: "opacity 0.3s ease-in-out" }}
       />
     );
   };
@@ -463,7 +491,11 @@ export default function TimelineChart({
             tick={{ fontSize: 10, fill: isDark ? "#9ca3af" : "#4b5563" }}
             stroke={isDark ? "#4b5563" : "#9ca3af"}
           />
-          <Tooltip content={<CustomTooltip />} />
+          <Tooltip
+            content={<CustomTooltip />}
+            position={{ x: 60, y: 20 }}
+            wrapperStyle={{ pointerEvents: 'none' }}
+          />
           <Legend
             wrapperStyle={{
               paddingTop: "20px",
@@ -499,10 +531,34 @@ export default function TimelineChart({
               dataKey="votingPower"
               shape={<DiamondShape />}
               legendType="none"
+              isAnimationActive={false}
             />
           )}
         </ComposedChart>
       </ResponsiveContainer>
+      {/* Vote type legend */}
+      {votes.length > 0 && (
+        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex items-center gap-4 text-xs text-gray-600 dark:text-gray-400">
+            <span className="font-medium">Vote Markers:</span>
+            {(Object.keys(VOTE_COLORS) as VoteSource[]).map((voteType) => (
+              <button
+                key={voteType}
+                onClick={() => toggleVoteType(voteType)}
+                className={`flex items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity ${
+                  hiddenVoteTypes.has(voteType) ? "opacity-40 line-through" : ""
+                }`}
+              >
+                <span
+                  className="w-3 h-3 rotate-45"
+                  style={{ backgroundColor: VOTE_COLORS[voteType] }}
+                />
+                {VOTE_LABELS[voteType]}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

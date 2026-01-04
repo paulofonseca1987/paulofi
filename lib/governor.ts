@@ -86,6 +86,7 @@ export interface GovernorVoteWithSnapshot extends GovernorVote {
   snapshotBlock: number;        // Original Ethereum block number from proposalSnapshot()
   snapshotTimestamp: number;    // Timestamp of the Ethereum block
   arbitrumSnapshotBlock: number; // Converted Arbitrum block number for timeline lookup
+  proposalTitle?: string;       // Title extracted from proposal description
 }
 
 /**
@@ -197,6 +198,74 @@ export async function convertEthBlockToArbitrumBlock(
 
 // Chunk size for block range queries (free RPCs support much larger ranges)
 const CHUNK_SIZE = 1000000n; // 1 million blocks per chunk
+
+/**
+ * Extract title from proposal description (first line, up to first newline or #)
+ */
+function extractTitleFromDescription(description: string): string {
+  if (!description) return '';
+
+  // Remove leading # if present (markdown heading)
+  let title = description.trim();
+  if (title.startsWith('#')) {
+    title = title.replace(/^#+\s*/, '');
+  }
+
+  // Get first line (up to newline)
+  const firstLine = title.split('\n')[0].trim();
+
+  // Limit length
+  return firstLine.slice(0, 200);
+}
+
+/**
+ * Fetch proposal title from ProposalCreated event
+ */
+export async function fetchProposalTitle(
+  client: PublicClient,
+  governorAddress: Address,
+  proposalId: string,
+  fromBlock: bigint,
+  toBlock: bigint
+): Promise<string | null> {
+  try {
+    // Try to find ProposalCreated event for this proposal
+    const logs = await client.getLogs({
+      address: governorAddress,
+      event: parseAbiItem('event ProposalCreated(uint256 proposalId, address proposer, address[] targets, uint256[] values, string[] signatures, bytes[] calldatas, uint256 voteStart, uint256 voteEnd, string description)'),
+      fromBlock,
+      toBlock,
+    });
+
+    for (const log of logs) {
+      if ((log.args.proposalId as bigint).toString() === proposalId) {
+        const description = log.args.description as string;
+        return extractTitleFromDescription(description);
+      }
+    }
+  } catch (error) {
+    // ProposalCreated event format might differ, try alternative format
+    try {
+      const logs = await client.getLogs({
+        address: governorAddress,
+        event: parseAbiItem('event ProposalCreated(uint256 indexed proposalId, address indexed proposer, address[] targets, uint256[] values, string[] signatures, bytes[] calldatas, uint256 startBlock, uint256 endBlock, string description)'),
+        fromBlock,
+        toBlock,
+      });
+
+      for (const log of logs) {
+        if ((log.args.proposalId as bigint).toString() === proposalId) {
+          const description = log.args.description as string;
+          return extractTitleFromDescription(description);
+        }
+      }
+    } catch (e) {
+      console.error(`Failed to fetch proposal title for ${proposalId}:`, e);
+    }
+  }
+
+  return null;
+}
 
 /**
  * Fetch VoteCast events from a governor contract (chunked to handle RPC limits)
@@ -351,13 +420,13 @@ export async function fetchGovernorVotesWithSnapshots(
   // Use archive client for state queries if provided, otherwise use event client
   const stateClient = archiveClient || eventClient;
 
-  // Cache for snapshot blocks (same proposal = same snapshot)
-  const snapshotCache = new Map<string, { ethBlock: number; timestamp: number; arbBlock: number }>();
+  // Cache for proposal info (same proposal = same snapshot and title)
+  const proposalCache = new Map<string, { ethBlock: number; timestamp: number; arbBlock: number; title: string | null }>();
 
   for (const vote of votes) {
-    let snapshotInfo = snapshotCache.get(vote.proposalId);
+    let proposalInfo = proposalCache.get(vote.proposalId);
 
-    if (!snapshotInfo) {
+    if (!proposalInfo) {
       try {
         // Get the Ethereum snapshot block from the governor contract
         const ethSnapshotBlock = await getProposalSnapshot(stateClient, governorAddress, vote.proposalId);
@@ -377,8 +446,15 @@ export async function fetchGovernorVotesWithSnapshots(
           arbSnapshotBlock = ethSnapshotBlock; // No conversion
         }
 
-        snapshotInfo = { ethBlock: ethSnapshotBlock, timestamp: snapshotTimestamp, arbBlock: arbSnapshotBlock };
-        snapshotCache.set(vote.proposalId, snapshotInfo);
+        // Fetch proposal title from ProposalCreated event
+        console.log(`  Fetching title for proposal ${vote.proposalId}...`);
+        const title = await fetchProposalTitle(eventClient, governorAddress, vote.proposalId, fromBlock, toBlock);
+        if (title) {
+          console.log(`  Found title: ${title.slice(0, 50)}...`);
+        }
+
+        proposalInfo = { ethBlock: ethSnapshotBlock, timestamp: snapshotTimestamp, arbBlock: arbSnapshotBlock, title };
+        proposalCache.set(vote.proposalId, proposalInfo);
       } catch (error) {
         console.error(`Failed to get snapshot for proposal ${vote.proposalId}, skipping:`, error);
         continue;
@@ -390,9 +466,10 @@ export async function fetchGovernorVotesWithSnapshots(
 
     votesWithSnapshots.push({
       ...vote,
-      snapshotBlock: snapshotInfo.ethBlock,
-      snapshotTimestamp: snapshotInfo.timestamp,
-      arbitrumSnapshotBlock: snapshotInfo.arbBlock,
+      snapshotBlock: proposalInfo.ethBlock,
+      snapshotTimestamp: proposalInfo.timestamp,
+      arbitrumSnapshotBlock: proposalInfo.arbBlock,
+      proposalTitle: proposalInfo.title || undefined,
     });
   }
 

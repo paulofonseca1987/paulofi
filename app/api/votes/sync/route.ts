@@ -161,6 +161,7 @@ export async function POST() {
           voteTimestamp: vote.snapshotTimestamp,
           voteBlockNumber: vote.blockNumber,
           choice: vote.support,
+          proposalTitle: vote.proposalTitle,
           delegatorBreakdown,
         });
       }
@@ -205,6 +206,7 @@ export async function POST() {
           voteTimestamp: vote.snapshotTimestamp,
           voteBlockNumber: vote.blockNumber,
           choice: vote.support,
+          proposalTitle: vote.proposalTitle,
           delegatorBreakdown,
         });
       }
