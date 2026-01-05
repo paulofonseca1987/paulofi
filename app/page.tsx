@@ -472,11 +472,6 @@ export default function Home() {
               )}
             </div>
 
-            {/* Votes List */}
-            <div className="mb-8">
-              <VotesList votes={votes} />
-            </div>
-
             {/* Delegators List */}
             <div className="mb-8">
               <DelegatorsList
@@ -484,6 +479,11 @@ export default function Home() {
                 timeline={timeline}
                 rewardShares={rewardShares}
               />
+            </div>
+
+            {/* Votes List */}
+            <div className="mb-8">
+              <VotesList votes={votes} />
             </div>
           </>
         ) : (

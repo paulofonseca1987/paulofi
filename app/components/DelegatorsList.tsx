@@ -209,15 +209,12 @@ export default function DelegatorsList({ delegators, timeline, rewardShares }: D
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-900">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Address
-              </th>
               <th
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
                 onClick={() => handleSort('dateStart')}
               >
                 <div className="flex items-center">
-                  Delegation Period
+                  Token Holder
                   <SortIcon column="dateStart" />
                 </div>
               </th>
@@ -226,7 +223,7 @@ export default function DelegatorsList({ delegators, timeline, rewardShares }: D
                 onClick={() => handleSort('currentBalance')}
               >
                 <div className="flex items-center">
-                  Final Voting Power
+                  Voting Power (on Jan 1, 2026)
                   <SortIcon column="currentBalance" />
                 </div>
               </th>
@@ -248,9 +245,16 @@ export default function DelegatorsList({ delegators, timeline, rewardShares }: D
                 className="hover:bg-gray-50 dark:hover:bg-gray-700"
                 style={{ opacity: info.currentBalance === 0n ? 0.5 : 1 }}
               >
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-6 py-4">
                   <div className="flex items-center">
-                    <span className="font-mono text-sm dark:text-gray-300">{formatAddress(info.address)}</span>
+                    <a
+                      href={`https://arbiscan.io/address/${info.address}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-mono text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                      {info.address}
+                    </a>
                     <button
                       onClick={() => navigator.clipboard.writeText(info.address)}
                       className="ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
@@ -271,45 +275,49 @@ export default function DelegatorsList({ delegators, timeline, rewardShares }: D
                       </svg>
                     </button>
                   </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {formatDelegationPeriod(info.dateStart, info.dateEnd)}
+                  </p>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                  {formatDelegationPeriod(info.dateStart, info.dateEnd)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-6 py-4">
                   {info.currentBalance === 0n ? (
-                    <span className="text-sm text-gray-500 dark:text-gray-400">0 ARB Voting Power</span>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">0 ARB Voting Power on Jan 1, 2026</span>
                   ) : (
-                    <div className="flex items-center">
-                      <div className="w-24 bg-gray-200 dark:bg-gray-700 rounded-full h-2 mr-2">
+                    <div>
+                      <div className="flex items-center">
+                        <span className="text-sm font-medium dark:text-gray-200 mr-2">
+                          {formatBalance(info.currentBalance)} ARB
+                        </span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          {getPercentage(info.currentBalance).toFixed(2)}%
+                        </span>
+                      </div>
+                      <div className="w-48 bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-1">
                         <div
                           className="bg-blue-600 h-2 rounded-full"
                           style={{ width: `${getPercentage(info.currentBalance)}%` }}
                         />
                       </div>
-                      <span className="text-sm font-medium dark:text-gray-200 mr-2">
-                        {formatBalance(info.currentBalance)} ARB
-                      </span>
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {getPercentage(info.currentBalance).toFixed(2)}%
-                      </span>
                     </div>
                   )}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-6 py-4">
                   {info.rewardPercentage > 0 ? (
-                    <div className="flex items-center">
-                      <div className="w-24 bg-gray-200 dark:bg-gray-700 rounded-full h-2 mr-2">
+                    <div>
+                      <div className="flex items-center">
+                        <span className="text-sm font-bold dark:text-gray-200 mr-2">
+                          {info.rewardVoteCount} Votes
+                        </span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          {info.rewardPercentage.toFixed(2)}%
+                        </span>
+                      </div>
+                      <div className="w-48 bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-1">
                         <div
                           className="bg-green-600 h-2 rounded-full"
                           style={{ width: `${Math.min(info.rewardPercentage, 100)}%` }}
                         />
                       </div>
-                      <span className="text-sm font-bold dark:text-gray-200 mr-2">
-                        {info.rewardVoteCount} Votes
-                      </span>
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {info.rewardPercentage.toFixed(2)}%
-                      </span>
                     </div>
                   ) : (
                     <span className="text-sm text-gray-500 dark:text-gray-400">-</span>
