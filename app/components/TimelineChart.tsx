@@ -593,10 +593,10 @@ export default function TimelineChart({
       </div>
 
       {/* Layers Panel */}
-      <div className="w-full lg:w-48 flex-shrink-0 lg:h-full overflow-y-auto flex flex-row lg:flex-col flex-wrap lg:flex-nowrap">
+      <div className="w-full lg:w-48 flex-shrink-0 lg:h-full overflow-y-auto flex flex-col">
           {/* Votes Section */}
           {votes.length > 0 && (
-            <div className="w-1/2 lg:w-full lg:border-b border-gray-200 dark:border-gray-700">
+            <div className="w-full border-b border-gray-200 dark:border-gray-700">
               {/* Section Header */}
               <button
                 onClick={toggleAllVotes}
@@ -656,7 +656,7 @@ export default function TimelineChart({
           )}
 
           {/* Delegators Section */}
-          <div className="w-1/2 lg:w-full">
+          <div className="w-full">
             {/* Section Header */}
             <button
               onClick={toggleAllDelegators}
