@@ -13,24 +13,9 @@ import {
   updateSyncProgress,
   clearSyncProgress
 } from '@/lib/storage';
-import { readFileSync } from 'fs';
-import { join } from 'path';
+import { getConfig, resolveEndBlock } from '@/lib/config';
 import type { Address } from 'viem';
 import type { VotingPowerData, TimelineEntry, DelegationEvent, MetadataSchema, CurrentStateSchema } from '@/lib/types';
-
-function getConfig() {
-  try {
-    const configPath = join(process.cwd(), 'config.json');
-    return JSON.parse(readFileSync(configPath, 'utf-8')) as {
-      delegateAddress: string;
-      tokenAddress: string;
-      chainId: number;
-    };
-  } catch (error) {
-    console.error('Error reading config.json:', error);
-    throw new Error('Failed to read config.json. Please ensure it exists and is valid JSON.');
-  }
-}
 
 export const maxDuration = 300; // 5 minutes for Vercel
 
@@ -152,14 +137,14 @@ export async function POST(request: NextRequest) {
     const metadata = await getMetadata();
     const currentState = await getCurrentState();
 
-    // Full sync from ARB token deployment to current block
-    const START_BLOCK = 248786699;
-    const MAX_BLOCK = 416593978n; // Hard cap - do not sync beyond this block
+    // Full sync from configured startBlock to endBlock (or current block if "latest")
+    const startBlock = BigInt(config.startBlock);
+    const maxBlock = await resolveEndBlock(eventClient);
     const fromBlock = metadata
       ? BigInt(metadata.lastSyncedBlock + 1)
-      : BigInt(START_BLOCK);
+      : startBlock;
     const currentBlock = BigInt(await getCurrentBlockNumber(eventClient));
-    const toBlock = currentBlock > MAX_BLOCK ? MAX_BLOCK : currentBlock;
+    const toBlock = currentBlock > maxBlock ? maxBlock : currentBlock;
 
     if (fromBlock > toBlock) {
       await releaseSyncLock();

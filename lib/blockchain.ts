@@ -1,5 +1,5 @@
 import { createPublicClient, http, type PublicClient, type Address } from 'viem';
-import { arbitrum } from 'viem/chains';
+import { getChain } from './config';
 import type { DelegationEvent } from './types';
 
 // Failed query tracking
@@ -75,7 +75,7 @@ export function createEventFetchingClient(): PublicClient {
   const rpcUrl = process.env.FREE_RPC_URL || FREE_RPC_ENDPOINTS[0];
 
   return createPublicClient({
-    chain: arbitrum,
+    chain: getChain(),
     transport: http(rpcUrl, {
       retryCount: 3,
       retryDelay: 1000,
@@ -95,7 +95,7 @@ export function createArchiveClient(): PublicClient {
   }
 
   return createPublicClient({
-    chain: arbitrum,
+    chain: getChain(),
     transport: http(rpcUrl, {
       retryCount: 3,
       retryDelay: 1000,

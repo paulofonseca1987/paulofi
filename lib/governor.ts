@@ -3,7 +3,7 @@
  */
 
 import { createPublicClient, http, type PublicClient, type Address, parseAbiItem } from 'viem';
-import { arbitrum, mainnet } from 'viem/chains';
+import { getChain, getL1Chain } from './config';
 
 // Free RPC endpoints that support larger block ranges
 const FREE_RPC_ENDPOINTS = [
@@ -96,7 +96,7 @@ export function createGovernorClient(): PublicClient {
   const rpcUrl = process.env.FREE_RPC_URL || FREE_RPC_ENDPOINTS[0];
 
   return createPublicClient({
-    chain: arbitrum,
+    chain: getChain(),
     transport: http(rpcUrl, {
       retryCount: 3,
       retryDelay: 1000,
@@ -111,7 +111,7 @@ export function createArchiveGovernorClient(): PublicClient {
   const rpcUrl = process.env.DRPC_RPC_URL || process.env.ARBITRUM_RPC_URL || FREE_RPC_ENDPOINTS[0];
 
   return createPublicClient({
-    chain: arbitrum,
+    chain: getChain(),
     transport: http(rpcUrl, {
       retryCount: 3,
       retryDelay: 1000,
@@ -120,13 +120,19 @@ export function createArchiveGovernorClient(): PublicClient {
 }
 
 /**
- * Create an Ethereum mainnet client for fetching L1 block timestamps
+ * Create an L1 chain client for fetching L1 block timestamps
+ * Used for converting L1 block numbers to L2 timestamps
  */
 export function createEthereumClient(): PublicClient {
+  const l1Chain = getL1Chain();
+  if (!l1Chain) {
+    throw new Error('L1 chain (l1ChainName) is not configured in config.json');
+  }
+
   const rpcUrl = process.env.ETH_RPC_URL || ETH_RPC_ENDPOINTS[0];
 
   return createPublicClient({
-    chain: mainnet,
+    chain: l1Chain,
     transport: http(rpcUrl, {
       retryCount: 3,
       retryDelay: 1000,

@@ -2,6 +2,11 @@ export interface Config {
   delegateAddress: string;
   tokenAddress: string;
   chainId: number;
+  chainName: string;
+  l1ChainName?: string;
+  startBlock: number;
+  endBlock: number | 'latest';
+  tallyDaoName?: string;
   snapshotSpace?: string;
   governors?: {
     core: string;

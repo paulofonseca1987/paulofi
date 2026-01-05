@@ -32,6 +32,8 @@ export default function Home() {
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
   const [syncProgress, setSyncProgress] = useState<SyncProgress | null>(null);
   const [delegateAddress, setDelegateAddress] = useState<string | null>(null);
+  const [tallyDaoName, setTallyDaoName] = useState<string>('arbitrum');
+  const [snapshotSpace, setSnapshotSpace] = useState<string>('arbitrumfoundation.eth');
 
   // Calculate reward shares from votes data
   const rewardShares = useMemo(() => {
@@ -231,6 +233,8 @@ export default function Home() {
         if (response.ok) {
           const config = await response.json();
           setDelegateAddress(config.delegateAddress);
+          if (config.tallyDaoName) setTallyDaoName(config.tallyDaoName);
+          if (config.snapshotSpace) setSnapshotSpace(config.snapshotSpace);
         }
       } catch (err) {
         console.warn("Failed to fetch config:", err);
@@ -483,7 +487,7 @@ export default function Home() {
 
             {/* Votes List */}
             <div className="mb-8">
-              <VotesList votes={votes} />
+              <VotesList votes={votes} tallyDaoName={tallyDaoName} snapshotSpace={snapshotSpace} />
             </div>
           </>
         ) : (

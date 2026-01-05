@@ -1,25 +1,11 @@
 import { NextResponse } from 'next/server';
-import { readFileSync } from 'fs';
-import { join } from 'path';
 import type { Config, VoteEntry, TimelineEntry } from '@/lib/types';
 import { fetchSnapshotVotes } from '@/lib/snapshot';
 import { createGovernorClient, createArchiveGovernorClient, createEthereumClient, fetchGovernorVotesWithSnapshots } from '@/lib/governor';
 import { appendVotes, getVotesMetadata, clearVotesCache } from '@/lib/votesStorage';
 import { getFullTimeline } from '@/lib/storage';
+import { getConfig, resolveEndBlock } from '@/lib/config';
 import type { Address } from 'viem';
-
-// Block range constants (same as main sync)
-const START_BLOCK = 248786699;
-const MAX_BLOCK = 416593978;
-
-/**
- * Get config from file
- */
-function getConfig(): Config {
-  const configPath = join(process.cwd(), 'config.json');
-  const configData = readFileSync(configPath, 'utf-8');
-  return JSON.parse(configData);
-}
 
 /**
  * Find the timeline entry at or before a given block
@@ -72,6 +58,13 @@ export async function POST() {
       );
     }
 
+    // Get block range from config
+    const governorClient = createGovernorClient();
+    const startBlock = config.startBlock;
+    const maxBlock = config.endBlock === 'latest'
+      ? Number(await governorClient.getBlockNumber())
+      : config.endBlock;
+
     // Load timeline for delegator breakdown lookup
     console.log('📊 Loading timeline data...');
     const timeline = await getFullTimeline();
@@ -88,8 +81,8 @@ export async function POST() {
       const snapshotVotes = await fetchSnapshotVotes(
         delegateAddress,
         snapshotSpace,
-        START_BLOCK,
-        MAX_BLOCK
+        startBlock,
+        maxBlock
       );
 
       console.log(`  Found ${snapshotVotes.length} Snapshot votes`);
@@ -137,8 +130,8 @@ export async function POST() {
         eventClient,
         governors.core as Address,
         delegateAddress as Address,
-        BigInt(START_BLOCK),
-        BigInt(MAX_BLOCK),
+        BigInt(startBlock),
+        BigInt(maxBlock),
         archiveClient,
         ethClient
       );
@@ -183,8 +176,8 @@ export async function POST() {
         eventClient,
         governors.treasury as Address,
         delegateAddress as Address,
-        BigInt(START_BLOCK),
-        BigInt(MAX_BLOCK),
+        BigInt(startBlock),
+        BigInt(maxBlock),
         archiveClient,
         ethClient
       );

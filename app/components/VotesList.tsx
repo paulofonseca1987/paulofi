@@ -5,6 +5,8 @@ import type { VoteEntry, VoteSource } from '@/lib/types';
 
 interface VotesListProps {
   votes: VoteEntry[];
+  tallyDaoName?: string;
+  snapshotSpace?: string;
 }
 
 type SortColumn = 'voteTimestamp' | 'votingPower' | 'delegatorCount';
@@ -32,7 +34,7 @@ const ONCHAIN_CHOICES: Record<number, { label: string; color: string }> = {
   2: { label: 'Abstain', color: 'text-yellow-600 dark:text-yellow-400' },
 };
 
-export default function VotesList({ votes }: VotesListProps) {
+export default function VotesList({ votes, tallyDaoName = 'arbitrum', snapshotSpace = 'arbitrumfoundation.eth' }: VotesListProps) {
   const [sortColumn, setSortColumn] = useState<SortColumn>('voteTimestamp');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
@@ -209,10 +211,10 @@ export default function VotesList({ votes }: VotesListProps) {
 
   const getProposalUrl = (vote: VoteEntry): string => {
     if (vote.source === 'snapshot') {
-      return `https://snapshot.box/#/s:arbitrumfoundation.eth/proposal/${vote.proposalId}`;
+      return `https://snapshot.box/#/s:${snapshotSpace}/proposal/${vote.proposalId}`;
     }
     // onchain-core and onchain-treasury both use Tally
-    return `https://www.tally.xyz/gov/arbitrum/proposal/${vote.proposalId}`;
+    return `https://www.tally.xyz/gov/${tallyDaoName}/proposal/${vote.proposalId}`;
   };
 
   const SortIcon = ({ column }: { column: SortColumn }) => {

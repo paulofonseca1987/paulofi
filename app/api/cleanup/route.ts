@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { truncateTimelineAfterBlock } from '@/lib/storage';
-
-const MAX_BLOCK = 416593978;
+import { getConfig, resolveEndBlock } from '@/lib/config';
+import { createEventFetchingClient } from '@/lib/blockchain';
 
 export async function POST(request: NextRequest) {
   // Validate sync token
@@ -13,13 +13,20 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    console.log(`[Cleanup] Starting truncation to block ${MAX_BLOCK}...`);
+    // Get maxBlock from config (resolve "latest" if needed)
+    const config = getConfig();
+    const client = createEventFetchingClient();
+    const maxBlock = config.endBlock === 'latest'
+      ? Number(await client.getBlockNumber())
+      : config.endBlock;
 
-    const result = await truncateTimelineAfterBlock(MAX_BLOCK);
+    console.log(`[Cleanup] Starting truncation to block ${maxBlock}...`);
+
+    const result = await truncateTimelineAfterBlock(maxBlock);
 
     return NextResponse.json({
       message: 'Cleanup completed',
-      maxBlock: MAX_BLOCK,
+      maxBlock: maxBlock,
       ...result
     });
   } catch (error: any) {
