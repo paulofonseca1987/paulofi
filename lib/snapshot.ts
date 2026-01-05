@@ -8,7 +8,7 @@ export interface SnapshotVote {
   id: string;
   voter: string;
   created: number;
-  choice: number | number[];
+  choice: number | number[] | Record<string, number>;  // single, ranked, or weighted
   reason: string;
   vp: number;
   proposal: {
@@ -18,6 +18,8 @@ export interface SnapshotVote {
     snapshot: string; // block number as string
     start: number;
     end: number;
+    type: string;     // basic, single-choice, ranked-choice, weighted, etc.
+    choices: string[]; // array of choice labels
   };
 }
 
@@ -63,6 +65,8 @@ export async function fetchSnapshotVotes(
             snapshot
             start
             end
+            type
+            choices
           }
         }
       }

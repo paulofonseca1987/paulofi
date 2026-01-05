@@ -29,7 +29,7 @@ const SOURCE_CONFIG: Record<VoteSource, { label: string; color: string }> = {
 const ONCHAIN_CHOICES: Record<number, { label: string; color: string }> = {
   0: { label: 'Against', color: 'text-red-600 dark:text-red-400' },
   1: { label: 'For', color: 'text-green-600 dark:text-green-400' },
-  2: { label: 'Abstain', color: 'text-gray-600 dark:text-gray-400' },
+  2: { label: 'Abstain', color: 'text-yellow-600 dark:text-yellow-400' },
 };
 
 export default function VotesList({ votes }: VotesListProps) {
@@ -71,28 +71,92 @@ export default function VotesList({ votes }: VotesListProps) {
     });
   };
 
-  const formatChoice = (vote: VoteEntry): { label: string; color: string } => {
+  const formatChoice = (vote: VoteEntry): { label: string; color: string; multiline?: boolean } => {
     if (vote.source === 'snapshot') {
-      // Snapshot votes can be single choice or ranked choice
-      if (Array.isArray(vote.choice)) {
-        // Ranked choice - show the ranking
-        return {
-          label: `Ranked: ${vote.choice.join(' > ')}`,
-          color: 'text-gray-700 dark:text-gray-300'
-        };
-      } else {
-        // Single choice - typically 1=For, 2=Against but varies by proposal
-        // Show the choice number since we don't have the proposal's choice labels
-        const choiceNum = vote.choice as number;
-        if (choiceNum === 1) {
-          return { label: 'For', color: 'text-green-600 dark:text-green-400' };
-        } else if (choiceNum === 2) {
-          return { label: 'Against', color: 'text-red-600 dark:text-red-400' };
-        } else if (choiceNum === 3) {
-          return { label: 'Abstain', color: 'text-gray-600 dark:text-gray-400' };
+      const choices = vote.proposalChoices || [];
+
+      // Helper to get choice label from index (1-based for Snapshot)
+      const getChoiceLabel = (choiceNum: number): string => {
+        if (choices.length > 0 && choiceNum >= 1 && choiceNum <= choices.length) {
+          return choices[choiceNum - 1];
         }
-        return { label: `Choice ${choiceNum}`, color: 'text-gray-700 dark:text-gray-300' };
+        return `Choice ${choiceNum}`;
+      };
+
+      // Check if it's a weighted vote (object with choice -> percentage)
+      if (typeof vote.choice === 'object' && !Array.isArray(vote.choice)) {
+        const weightedChoice = vote.choice as Record<string, number>;
+        const entries = Object.entries(weightedChoice);
+
+        if (entries.length === 0) {
+          return { label: 'No choice', color: 'text-gray-500 dark:text-gray-400' };
+        }
+
+        // Format weighted choices, each on its own line
+        // Snapshot weighted votes use ratios: {"5": 1} and {"5": 100} both mean 100%
+        // {"3": 20, "5": 80} means 20% and 80% respectively (20/(20+80) and 80/(20+80))
+        const totalWeight = entries.reduce((sum, [, weight]) => sum + weight, 0);
+        const weightedLines = entries
+          .sort(([, a], [, b]) => b - a) // Sort by weight descending
+          .map(([choiceKey, weight]) => {
+            const choiceNum = parseInt(choiceKey, 10);
+            const label = getChoiceLabel(choiceNum);
+            const pct = totalWeight > 0 ? Math.round((weight / totalWeight) * 100) : 0;
+            return `${pct}% ${label}`;
+          });
+
+        return {
+          label: weightedLines.join('\n'),
+          color: 'text-gray-700 dark:text-gray-300',
+          multiline: true
+        };
       }
+
+      // Multiple choice (array) - could be ranked-choice or approval
+      if (Array.isArray(vote.choice)) {
+        const choiceLabels = vote.choice.map((choiceNum) => getChoiceLabel(choiceNum));
+
+        // Approval voting - just list the approved options
+        if (vote.proposalType === 'approval') {
+          return {
+            label: choiceLabels.join(', '),
+            color: 'text-gray-700 dark:text-gray-300'
+          };
+        }
+
+        // Ranked choice - show each option with ordinal prefix on its own line
+        const getOrdinal = (n: number): string => {
+          const s = ['th', 'st', 'nd', 'rd'];
+          const v = n % 100;
+          return n + (s[(v - 20) % 10] || s[v] || s[0]);
+        };
+
+        const rankedLines = choiceLabels.map((label, i) => `${getOrdinal(i + 1)} ${label}`);
+        return {
+          label: rankedLines.join('\n'),
+          color: 'text-gray-700 dark:text-gray-300',
+          multiline: true
+        };
+      }
+
+      // Single choice
+      const choiceNum = vote.choice as number;
+      const choiceLabel = getChoiceLabel(choiceNum);
+
+      // Color based on common patterns
+      const lowerLabel = choiceLabel.toLowerCase();
+      if (lowerLabel === 'for' || lowerLabel === 'yes' || lowerLabel.includes('approve')) {
+        return { label: choiceLabel, color: 'text-green-600 dark:text-green-400' };
+      } else if (lowerLabel === 'against' || lowerLabel === 'no' || lowerLabel.includes('reject')) {
+        return { label: choiceLabel, color: 'text-red-600 dark:text-red-400' };
+      } else if (lowerLabel === 'abstain') {
+        const abstainColor = vote.proposalType === 'basic'
+          ? 'text-yellow-600 dark:text-yellow-400'
+          : 'text-gray-600 dark:text-gray-400';
+        return { label: choiceLabel, color: abstainColor };
+      }
+
+      return { label: choiceLabel, color: 'text-gray-700 dark:text-gray-300' };
     } else {
       // Onchain votes use standard OpenZeppelin encoding
       const choice = vote.choice as number;
@@ -140,6 +204,14 @@ export default function VotesList({ votes }: VotesListProps) {
       }
       return part;
     });
+  };
+
+  const getProposalUrl = (vote: VoteEntry): string => {
+    if (vote.source === 'snapshot') {
+      return `https://snapshot.box/#/s:arbitrumfoundation.eth/proposal/${vote.proposalId}`;
+    }
+    // onchain-core and onchain-treasury both use Tally
+    return `https://www.tally.xyz/gov/arbitrum/proposal/${vote.proposalId}`;
   };
 
   const SortIcon = ({ column }: { column: SortColumn }) => {
@@ -235,13 +307,19 @@ export default function VotesList({ votes }: VotesListProps) {
                     </span>
                   </td>
                   <td className="px-4 py-4">
-                    <div className="text-sm text-gray-900 dark:text-gray-100 max-w-xs truncate" title={vote.proposalTitle || vote.proposalId}>
+                    <a
+                      href={getProposalUrl(vote)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-blue-600 dark:text-blue-400 hover:underline max-w-xs line-clamp-3"
+                      title={vote.proposalTitle || vote.proposalId}
+                    >
                       {vote.proposalTitle || `Proposal ${vote.proposalId.slice(0, 8)}...`}
-                    </div>
+                    </a>
                   </td>
                   <td className="px-4 py-4">
                     <div className="max-w-xs">
-                      <span className={`text-sm font-medium ${choiceInfo.color}`}>
+                      <span className={`text-sm font-medium ${choiceInfo.color} ${choiceInfo.multiline ? 'whitespace-pre-line' : ''}`}>
                         {choiceInfo.label}
                       </span>
                       {hasReason && (

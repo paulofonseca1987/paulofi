@@ -20,9 +20,11 @@ export interface VoteEntry {
   snapshotBlockNumber: number;
   voteTimestamp: number;            // when vote was cast
   voteBlockNumber?: number;
-  choice: number | number[];
+  choice: number | number[] | Record<string, number>;  // single, ranked, or weighted
   reason?: string;                  // vote reason/rationale
   proposalTitle?: string;
+  proposalType?: string;            // basic, single-choice, ranked-choice, weighted, etc.
+  proposalChoices?: string[];       // array of choice labels for the proposal
   delegatorBreakdown: Record<string, string>;  // from timeline at snapshot
 }
 

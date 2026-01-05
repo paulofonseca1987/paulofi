@@ -114,6 +114,8 @@ export async function POST() {
           choice: vote.choice,
           reason: vote.reason || undefined,
           proposalTitle: vote.proposal.title,
+          proposalType: vote.proposal.type,
+          proposalChoices: vote.proposal.choices,
           delegatorBreakdown,
         });
       }
