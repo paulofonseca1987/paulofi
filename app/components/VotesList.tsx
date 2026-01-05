@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import type { VoteEntry, VoteSource } from '@/lib/types';
 
 interface VotesListProps {
@@ -35,6 +35,16 @@ const ONCHAIN_CHOICES: Record<number, { label: string; color: string }> = {
 export default function VotesList({ votes }: VotesListProps) {
   const [sortColumn, setSortColumn] = useState<SortColumn>('voteTimestamp');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  const toggleExpanded = (key: string) => {
+    setExpandedRows(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
 
   // Sort votes
   const sortedVotes = useMemo(() => {
@@ -269,60 +279,142 @@ export default function VotesList({ votes }: VotesListProps) {
             {sortedVotes.map((vote) => {
               const sourceConfig = SOURCE_CONFIG[vote.source];
               const choiceInfo = formatChoice(vote);
-              const delegatorCount = Object.keys(vote.delegatorBreakdown).length;
+              const delegatorCount = Object.values(vote.delegatorBreakdown).filter(power => BigInt(power) > 0n).length;
               const hasReason = vote.reason && vote.reason.trim().length > 0;
               const reasonText = vote.reason || '';
+              const rowKey = `${vote.source}-${vote.proposalId}`;
+              const isExpanded = expandedRows.has(rowKey);
+
+              // Sort delegators by voting power descending, filter out zero balances
+              const sortedDelegators = Object.entries(vote.delegatorBreakdown)
+                .filter(([, power]) => BigInt(power) > 0n)
+                .sort(([, a], [, b]) => Number(BigInt(b) - BigInt(a)));
 
               return (
-                <tr
-                  key={`${vote.source}-${vote.proposalId}`}
-                  className="hover:bg-gray-50 dark:hover:bg-gray-700"
-                >
-                  <td className="px-1 py-4 whitespace-nowrap text-center">
-                    <span
-                      className="inline-block w-2 h-2 rotate-45"
-                      style={{
-                        backgroundColor: `${sourceConfig.color}80`,
-                        border: `1px solid ${sourceConfig.color}`
-                      }}
-                      title={sourceConfig.label}
-                    />
-                  </td>
-                  <td className="pl-1 pr-4 py-4">
-                    <a
-                      href={getProposalUrl(vote)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-blue-600 dark:text-blue-400 hover:underline line-clamp-3"
-                      title={vote.proposalTitle || vote.proposalId}
-                    >
-                      {vote.proposalTitle || `Proposal ${vote.proposalId.slice(0, 8)}...`}
-                    </a>
-                  </td>
-                  <td className="px-4 py-4">
-                    <div>
-                      <span className={`text-sm font-medium ${choiceInfo.color} ${choiceInfo.multiline ? 'whitespace-pre-line' : ''}`}>
-                        {choiceInfo.label}
-                      </span>
-                      {hasReason && (
-                        <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
-                          {renderTextWithLinks(reasonText)}
+                <React.Fragment key={rowKey}>
+                  <tr className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <td className="px-1 py-4 whitespace-nowrap text-center">
+                      <span
+                        className="inline-block w-2 h-2 rotate-45"
+                        style={{
+                          backgroundColor: `${sourceConfig.color}80`,
+                          border: `1px solid ${sourceConfig.color}`
+                        }}
+                        title={sourceConfig.label}
+                      />
+                    </td>
+                    <td className="pl-1 pr-4 py-4">
+                      <a
+                        href={getProposalUrl(vote)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-blue-600 dark:text-blue-400 hover:underline line-clamp-3"
+                        title={vote.proposalTitle || vote.proposalId}
+                      >
+                        {vote.proposalTitle || `Proposal ${vote.proposalId.slice(0, 8)}...`}
+                      </a>
+                    </td>
+                    <td className="px-4 py-4">
+                      <div>
+                        <span className={`text-base font-medium ${choiceInfo.color} ${choiceInfo.multiline ? 'whitespace-pre-line' : ''}`}>
+                          {choiceInfo.label}
+                        </span>
+                        {hasReason && (
+                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
+                            {renderTextWithLinks(reasonText)}
+                          </p>
+                        )}
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          on {formatDate(vote.voteTimestamp)}
                         </p>
-                      )}
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        on {formatDate(vote.voteTimestamp)}
-                      </p>
-                    </div>
-                  </td>
-                  <td className="px-4 py-4">
-                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                      {formatVotingPower(vote.votingPower)} ARB
-                    </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                      from {delegatorCount} delegator{delegatorCount !== 1 ? 's' : ''}
-                    </div>
-                  </td>
-                </tr>
+                      </div>
+                    </td>
+                    <td
+                      className="px-4 py-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
+                      onClick={() => toggleExpanded(rowKey)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                            {formatVotingPower(vote.votingPower)} ARB
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            from {delegatorCount} delegator{delegatorCount !== 1 ? 's' : ''}
+                          </div>
+                        </div>
+                        <svg
+                          className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </td>
+                  </tr>
+                  {isExpanded && (
+                    <tr className="bg-gray-50 dark:bg-gray-900">
+                      <td colSpan={4} className="px-6 py-4">
+                        <div className="space-y-2">
+                          {sortedDelegators.map(([address, power]) => {
+                            const percentage = (Number(BigInt(power)) / Number(BigInt(vote.votingPower))) * 100;
+                            return (
+                              <div key={address} className="flex items-center gap-4">
+                                <div className="flex items-center shrink-0">
+                                  <a
+                                    href={`https://arbiscan.io/address/${address}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="font-mono text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                                  >
+                                    {address}
+                                  </a>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      navigator.clipboard.writeText(address);
+                                    }}
+                                    className="ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                                    title="Copy address"
+                                  >
+                                    <svg
+                                      className="w-4 h-4"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                                      />
+                                    </svg>
+                                  </button>
+                                </div>
+                                <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                  <div
+                                    className="bg-blue-600 h-2 rounded-full"
+                                    style={{ width: `${percentage}%` }}
+                                  />
+                                </div>
+                                <div className="flex items-center gap-3 w-48 justify-end">
+                                  <span className="text-sm text-gray-600 dark:text-gray-400 w-[60px] text-right">
+                                    {percentage.toFixed(2)}%
+                                  </span>
+                                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100 w-[130px] text-right">
+                                    {formatVotingPower(power)} ARB
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
               );
             })}
           </tbody>
