@@ -1,24 +1,22 @@
 /**
  * Storage layer for vote data
- * Follows the same pattern as storage.ts
+ * Uses local file storage in data/ directory
  */
 
-import { put, head } from '@vercel/blob';
 import { writeFileSync, readFileSync, existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import type { VoteEntry, VotesMetadata, VotesData } from './types';
 
 const LOCAL_DATA_DIR = join(process.cwd(), 'data');
-const USE_LOCAL_STORAGE = !process.env.BLOB_READ_WRITE_TOKEN;
 
-const VOTES_METADATA_BLOB = 'data-votes-metadata.json';
-const VOTES_DATA_BLOB = 'data-votes.json';
+const VOTES_METADATA_FILE = 'data-votes-metadata.json';
+const VOTES_DATA_FILE = 'data-votes.json';
 
 // Cache storage with TTL
 const votesCache = new Map<string, { data: any; expiresAt: number }>();
 
 // Ensure data directory exists
-if (USE_LOCAL_STORAGE && typeof window === 'undefined') {
+if (typeof window === 'undefined') {
   try {
     if (!existsSync(LOCAL_DATA_DIR)) {
       mkdirSync(LOCAL_DATA_DIR, { recursive: true });
@@ -58,63 +56,32 @@ export function clearVotesCache(): void {
 }
 
 /**
- * Safe storage read
+ * Read data from local file
  */
-async function safeGetBlob(blobName: string): Promise<string | null> {
-  if (USE_LOCAL_STORAGE) {
-    try {
-      const filePath = join(LOCAL_DATA_DIR, blobName);
-      if (!existsSync(filePath)) {
-        return null;
-      }
-      return readFileSync(filePath, 'utf-8');
-    } catch (error) {
-      console.error(`Error reading local file ${blobName}:`, error);
+function readLocalFile(fileName: string): string | null {
+  try {
+    const filePath = join(LOCAL_DATA_DIR, fileName);
+    if (!existsSync(filePath)) {
       return null;
     }
-  } else {
-    try {
-      const blob = await head(blobName);
-      if (!blob || !blob.url) return null;
-
-      const response = await fetch(blob.url);
-      if (!response.ok) return null;
-
-      return await response.text();
-    } catch (error: any) {
-      if (error.status === 404 || error.statusCode === 404) {
-        return null;
-      }
-      console.error(`Error reading blob ${blobName}:`, error);
-      return null;
-    }
+    return readFileSync(filePath, 'utf-8');
+  } catch (error) {
+    console.error(`Error reading local file ${fileName}:`, error);
+    return null;
   }
 }
 
 /**
- * Safe storage write
+ * Write data to local file
  */
-async function safePutBlob(blobName: string, data: string): Promise<boolean> {
-  if (USE_LOCAL_STORAGE) {
-    try {
-      const filePath = join(LOCAL_DATA_DIR, blobName);
-      writeFileSync(filePath, data, 'utf-8');
-      return true;
-    } catch (error) {
-      console.error(`Error writing local file ${blobName}:`, error);
-      throw error;
-    }
-  } else {
-    try {
-      await put(blobName, data, {
-        access: 'public',
-        contentType: 'application/json',
-      });
-      return true;
-    } catch (error) {
-      console.error(`Error writing blob ${blobName}:`, error);
-      throw error;
-    }
+function writeLocalFile(fileName: string, data: string): boolean {
+  try {
+    const filePath = join(LOCAL_DATA_DIR, fileName);
+    writeFileSync(filePath, data, 'utf-8');
+    return true;
+  } catch (error) {
+    console.error(`Error writing local file ${fileName}:`, error);
+    throw error;
   }
 }
 
@@ -130,7 +97,7 @@ export async function getVotesMetadata(): Promise<VotesMetadata | null> {
   const cached = getCachedData<VotesMetadata>('votes-metadata');
   if (cached) return cached;
 
-  const data = await safeGetBlob(VOTES_METADATA_BLOB);
+  const data = readLocalFile(VOTES_METADATA_FILE);
   if (!data) return null;
 
   try {
@@ -147,7 +114,7 @@ export async function getVotesMetadata(): Promise<VotesMetadata | null> {
  * Save votes metadata
  */
 export async function saveVotesMetadata(metadata: VotesMetadata): Promise<void> {
-  await safePutBlob(VOTES_METADATA_BLOB, JSON.stringify(metadata, null, 2));
+  writeLocalFile(VOTES_METADATA_FILE, JSON.stringify(metadata, null, 2));
   setCachedData('votes-metadata', metadata, 30000);
 }
 
@@ -163,7 +130,7 @@ export async function getVotesData(): Promise<VotesData | null> {
   const cached = getCachedData<VotesData>('votes-data');
   if (cached) return cached;
 
-  const data = await safeGetBlob(VOTES_DATA_BLOB);
+  const data = readLocalFile(VOTES_DATA_FILE);
   if (!data) return null;
 
   try {
@@ -180,7 +147,7 @@ export async function getVotesData(): Promise<VotesData | null> {
  * Save all votes
  */
 export async function saveVotesData(data: VotesData): Promise<void> {
-  await safePutBlob(VOTES_DATA_BLOB, JSON.stringify(data, null, 2));
+  writeLocalFile(VOTES_DATA_FILE, JSON.stringify(data, null, 2));
   setCachedData('votes-data', data, 60000);
 }
 

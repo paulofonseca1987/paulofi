@@ -8,10 +8,10 @@ A Next.js application that tracks ERC20Votes delegation power and voting history
 - Visualize delegation changes with a stacked timeline chart
 - View current delegators and their balances
 - Track votes on Snapshot.org proposals
-- Track votes on on-chain governor proposals (Tally)
+- Track votes on onchain governor proposals
 - Multi-chain support (Arbitrum, Optimism, Base, Polygon, and more)
 - Automatic sync with blockchain using free RPC endpoints
-- Data stored in Vercel Blob Storage
+- Data stored locally in `data/` directory
 
 ## Quick Start for New Delegates
 
@@ -46,8 +46,8 @@ npm install
 
 3. **Set up environment variables** (create `.env.local`):
 ```bash
-BLOB_READ_WRITE_TOKEN=your_vercel_blob_token
 SYNC_SECRET=your_sync_secret
+DRPC_RPC_URL=your_archive_rpc_url  # Optional, for historical data
 ```
 
 4. **Run the development server:**
@@ -55,7 +55,14 @@ SYNC_SECRET=your_sync_secret
 npm run dev
 ```
 
-5. **Sync data** by visiting `http://localhost:3000` and clicking "Sync Data"
+5. **Sync data** by calling the sync API endpoints:
+```bash
+# Sync delegation events
+curl -X POST http://localhost:3000/api/sync
+
+# Sync votes (Snapshot + on-chain)
+curl -X POST http://localhost:3000/api/votes/sync
+```
 
 ## Configuration Reference
 
@@ -88,35 +95,44 @@ npm run dev
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `BLOB_READ_WRITE_TOKEN` | Yes | Vercel Blob Storage token |
 | `SYNC_SECRET` | No | Secret for background sync API authentication |
 | `DRPC_RPC_URL` | No | Custom RPC endpoint (falls back to free public RPCs) |
 | `ARCHIVE_RPC_URL` | No | Archive node RPC for historical data |
 
-## Deployment to Vercel
+## Deployment
 
 1. Push your code to GitHub
-2. Import the project in Vercel
-3. Add environment variables in Vercel dashboard:
-   - `BLOB_READ_WRITE_TOKEN` (from Vercel Blob Storage)
+2. Deploy to your preferred hosting platform (Vercel, Railway, etc.)
+3. Set environment variables:
    - `SYNC_SECRET` (generate a random string)
+   - `DRPC_RPC_URL` (optional, for better RPC performance)
 4. Deploy!
+
+**Note:** Data is stored in the `data/` directory. Make sure this directory is writable and persistent across deployments.
 
 ## Syncing Data
 
 ### Initial Sync
-Click "Sync Data" on the dashboard to fetch all historical delegation events and votes.
+Run the sync endpoints to fetch all historical delegation events and votes:
+
+```bash
+# Sync delegation events (this may take a while for large block ranges)
+curl -X POST http://localhost:3000/api/sync
+
+# Sync votes from Snapshot and on-chain governors
+curl -X POST http://localhost:3000/api/votes/sync
+```
 
 ### Background Sync
 For production, set up a cron job to call the sync endpoints:
 
 ```bash
 # Sync delegation events
-curl -X POST https://your-domain.vercel.app/api/sync/background \
+curl -X POST https://your-domain.com/api/sync/background \
   -H "X-Sync-Token: your_sync_secret"
 
 # Sync votes
-curl -X POST https://your-domain.vercel.app/api/votes/sync \
+curl -X POST https://your-domain.com/api/votes/sync \
   -H "X-Sync-Token: your_sync_secret"
 ```
 
@@ -125,14 +141,14 @@ curl -X POST https://your-domain.vercel.app/api/votes/sync \
 - Uses free public RPC endpoints (no API keys required)
 - Automatically falls back to multiple RPC endpoints if one fails
 - Processes events in chunks to handle rate limits
-- Stores processed data in Vercel Blob Storage for fast retrieval
+- Stores processed data locally in `data/` directory
 
 ## Architecture
 
 - **Frontend**: Next.js with React and Recharts for visualization
 - **Backend**: Next.js API routes
 - **Blockchain**: Viem for Ethereum interactions
-- **Storage**: Vercel Blob Storage
+- **Storage**: Local file storage (`data/` directory)
 - **Governance**: Snapshot.org GraphQL API + On-chain governor events
 
 ## API Endpoints

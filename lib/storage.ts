@@ -1,4 +1,3 @@
-import { put, head, del } from '@vercel/blob';
 import { writeFileSync, readFileSync, existsSync, mkdirSync, unlinkSync } from 'fs';
 import { join } from 'path';
 import type {
@@ -17,15 +16,12 @@ const PARTITION_SIZE = 1000;
 const LEGACY_BLOB_NAME = 'voting-power-data.json';
 const LOCAL_DATA_DIR = join(process.cwd(), 'data');
 
-// Check if we should use local storage (development mode)
-const USE_LOCAL_STORAGE = !process.env.BLOB_READ_WRITE_TOKEN;
-
 // Cache storage with TTL
 const cache = new Map<string, { data: any; expiresAt: number }>();
 
-// Ensure data directory exists for local storage
-if (USE_LOCAL_STORAGE && typeof window === 'undefined') {
-  console.log('📁 Using LOCAL FILE STORAGE for development (data/ directory)');
+// Ensure data directory exists
+if (typeof window === 'undefined') {
+  console.log('📁 Using LOCAL FILE STORAGE (data/ directory)');
   try {
     if (!existsSync(LOCAL_DATA_DIR)) {
       mkdirSync(LOCAL_DATA_DIR, { recursive: true });
@@ -34,8 +30,6 @@ if (USE_LOCAL_STORAGE && typeof window === 'undefined') {
   } catch (error) {
     console.error('Failed to create data directory:', error);
   }
-} else if (!USE_LOCAL_STORAGE && typeof window === 'undefined') {
-  console.log('☁️  Using VERCEL BLOB STORAGE for production');
 }
 
 /**
@@ -68,68 +62,48 @@ export function clearCache(): void {
 }
 
 /**
- * Safe storage read (local file or blob)
+ * Read data from local file
  */
-async function safeGetBlob(blobName: string): Promise<string | null> {
-  if (USE_LOCAL_STORAGE) {
-    // Use local file storage
-    try {
-      const filePath = join(LOCAL_DATA_DIR, blobName);
-      if (!existsSync(filePath)) {
-        return null;
-      }
-      return readFileSync(filePath, 'utf-8');
-    } catch (error) {
-      console.error(`Error reading local file ${blobName}:`, error);
+function readLocalFile(fileName: string): string | null {
+  try {
+    const filePath = join(LOCAL_DATA_DIR, fileName);
+    if (!existsSync(filePath)) {
       return null;
     }
-  } else {
-    // Use Vercel Blob storage
-    try {
-      const blob = await head(blobName);
-      if (!blob || !blob.url) return null;
-
-      // Fetch the blob content from the URL
-      const response = await fetch(blob.url);
-      if (!response.ok) return null;
-
-      return await response.text();
-    } catch (error: any) {
-      if (error.status === 404 || error.statusCode === 404) {
-        return null;
-      }
-      console.error(`Error reading blob ${blobName}:`, error);
-      return null;
-    }
+    return readFileSync(filePath, 'utf-8');
+  } catch (error) {
+    console.error(`Error reading local file ${fileName}:`, error);
+    return null;
   }
 }
 
 /**
- * Safe storage write (local file or blob)
+ * Write data to local file
  */
-async function safePutBlob(blobName: string, data: string): Promise<boolean> {
-  if (USE_LOCAL_STORAGE) {
-    // Use local file storage
-    try {
-      const filePath = join(LOCAL_DATA_DIR, blobName);
-      writeFileSync(filePath, data, 'utf-8');
-      return true;
-    } catch (error) {
-      console.error(`Error writing local file ${blobName}:`, error);
-      throw error;
+function writeLocalFile(fileName: string, data: string): boolean {
+  try {
+    const filePath = join(LOCAL_DATA_DIR, fileName);
+    writeFileSync(filePath, data, 'utf-8');
+    return true;
+  } catch (error) {
+    console.error(`Error writing local file ${fileName}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Delete local file
+ */
+function deleteLocalFile(fileName: string): boolean {
+  try {
+    const filePath = join(LOCAL_DATA_DIR, fileName);
+    if (existsSync(filePath)) {
+      unlinkSync(filePath);
     }
-  } else {
-    // Use Vercel Blob storage
-    try {
-      await put(blobName, data, {
-        access: 'public',
-        contentType: 'application/json',
-      });
-      return true;
-    } catch (error) {
-      console.error(`Error writing blob ${blobName}:`, error);
-      throw error;
-    }
+    return true;
+  } catch (error) {
+    console.error(`Error deleting local file ${fileName}:`, error);
+    return false;
   }
 }
 
@@ -137,15 +111,15 @@ async function safePutBlob(blobName: string, data: string): Promise<boolean> {
 // LOCK MANAGEMENT
 // ============================================================================
 
-const LOCK_BLOB_NAME = 'data-sync-lock.json';
+const LOCK_FILE_NAME = 'data-sync-lock.json';
 const LOCK_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
-const PROGRESS_BLOB_NAME = 'data-sync-progress.json';
+const PROGRESS_FILE_NAME = 'data-sync-progress.json';
 
 /**
  * Check if sync lock exists and is valid
  */
 export async function checkSyncLock(): Promise<SyncLock | null> {
-  const lockData = await safeGetBlob(LOCK_BLOB_NAME);
+  const lockData = readLocalFile(LOCK_FILE_NAME);
   if (!lockData) return null;
 
   try {
@@ -182,7 +156,7 @@ export async function acquireSyncLock(): Promise<boolean> {
     pid: process.pid.toString()
   };
 
-  await safePutBlob(LOCK_BLOB_NAME, JSON.stringify(lock));
+  writeLocalFile(LOCK_FILE_NAME, JSON.stringify(lock));
   return true;
 }
 
@@ -190,26 +164,10 @@ export async function acquireSyncLock(): Promise<boolean> {
  * Release sync lock
  */
 export async function releaseSyncLock(): Promise<void> {
-  if (USE_LOCAL_STORAGE) {
-    // Use local file storage
-    try {
-      const filePath = join(LOCAL_DATA_DIR, LOCK_BLOB_NAME);
-      if (existsSync(filePath)) {
-        unlinkSync(filePath);
-      }
-    } catch (error) {
-      console.error('Error releasing lock:', error);
-    }
-  } else {
-    // Use Vercel Blob storage
-    try {
-      await del(LOCK_BLOB_NAME);
-    } catch (error: any) {
-      // Ignore 404 errors
-      if (error.status !== 404 && error.statusCode !== 404) {
-        console.error('Error releasing lock:', error);
-      }
-    }
+  try {
+    deleteLocalFile(LOCK_FILE_NAME);
+  } catch (error) {
+    console.error('Error releasing lock:', error);
   }
 }
 
@@ -217,15 +175,15 @@ export async function releaseSyncLock(): Promise<void> {
 // METADATA STORAGE
 // ============================================================================
 
-const METADATA_BLOB_NAME = 'data-metadata.json';
+const METADATA_FILE_NAME = 'data-metadata.json';
 const METADATA_CACHE_TTL = 30 * 1000; // 30 seconds
 
 /**
  * Store metadata
  */
 export async function storeMetadata(data: MetadataSchema): Promise<void> {
-  await safePutBlob(METADATA_BLOB_NAME, JSON.stringify(data, null, 2));
-  setCachedData(METADATA_BLOB_NAME, data, METADATA_CACHE_TTL);
+  writeLocalFile(METADATA_FILE_NAME, JSON.stringify(data, null, 2));
+  setCachedData(METADATA_FILE_NAME, data, METADATA_CACHE_TTL);
 }
 
 /**
@@ -233,15 +191,15 @@ export async function storeMetadata(data: MetadataSchema): Promise<void> {
  */
 export async function getMetadata(): Promise<MetadataSchema | null> {
   // Check cache first
-  const cached = getCachedData<MetadataSchema>(METADATA_BLOB_NAME);
+  const cached = getCachedData<MetadataSchema>(METADATA_FILE_NAME);
   if (cached) return cached;
 
-  const data = await safeGetBlob(METADATA_BLOB_NAME);
+  const data = readLocalFile(METADATA_FILE_NAME);
   if (!data) return null;
 
   try {
     const metadata: MetadataSchema = JSON.parse(data);
-    setCachedData(METADATA_BLOB_NAME, metadata, METADATA_CACHE_TTL);
+    setCachedData(METADATA_FILE_NAME, metadata, METADATA_CACHE_TTL);
     return metadata;
   } catch (error) {
     console.error('Error parsing metadata:', error);
@@ -253,15 +211,15 @@ export async function getMetadata(): Promise<MetadataSchema | null> {
 // CURRENT STATE STORAGE
 // ============================================================================
 
-const CURRENT_STATE_BLOB_NAME = 'data-current-state.json';
+const CURRENT_STATE_FILE_NAME = 'data-current-state.json';
 const CURRENT_STATE_CACHE_TTL = 60 * 1000; // 60 seconds
 
 /**
  * Store current state
  */
 export async function storeCurrentState(data: CurrentStateSchema): Promise<void> {
-  await safePutBlob(CURRENT_STATE_BLOB_NAME, JSON.stringify(data, null, 2));
-  setCachedData(CURRENT_STATE_BLOB_NAME, data, CURRENT_STATE_CACHE_TTL);
+  writeLocalFile(CURRENT_STATE_FILE_NAME, JSON.stringify(data, null, 2));
+  setCachedData(CURRENT_STATE_FILE_NAME, data, CURRENT_STATE_CACHE_TTL);
 }
 
 /**
@@ -269,15 +227,15 @@ export async function storeCurrentState(data: CurrentStateSchema): Promise<void>
  */
 export async function getCurrentState(): Promise<CurrentStateSchema | null> {
   // Check cache first
-  const cached = getCachedData<CurrentStateSchema>(CURRENT_STATE_BLOB_NAME);
+  const cached = getCachedData<CurrentStateSchema>(CURRENT_STATE_FILE_NAME);
   if (cached) return cached;
 
-  const data = await safeGetBlob(CURRENT_STATE_BLOB_NAME);
+  const data = readLocalFile(CURRENT_STATE_FILE_NAME);
   if (!data) return null;
 
   try {
     const currentState: CurrentStateSchema = JSON.parse(data);
-    setCachedData(CURRENT_STATE_BLOB_NAME, currentState, CURRENT_STATE_CACHE_TTL);
+    setCachedData(CURRENT_STATE_FILE_NAME, currentState, CURRENT_STATE_CACHE_TTL);
     return currentState;
   } catch (error) {
     console.error('Error parsing current state:', error);
@@ -289,7 +247,7 @@ export async function getCurrentState(): Promise<CurrentStateSchema | null> {
 // TIMELINE STORAGE
 // ============================================================================
 
-const TIMELINE_INDEX_BLOB_NAME = 'data-timeline-index.json';
+const TIMELINE_INDEX_FILE_NAME = 'data-timeline-index.json';
 const TIMELINE_INDEX_CACHE_TTL = 60 * 1000; // 60 seconds
 const TIMELINE_PARTITION_CACHE_TTL = 300 * 1000; // 300 seconds
 
@@ -297,8 +255,8 @@ const TIMELINE_PARTITION_CACHE_TTL = 300 * 1000; // 300 seconds
  * Store timeline index
  */
 async function storeTimelineIndex(index: TimelineIndex): Promise<void> {
-  await safePutBlob(TIMELINE_INDEX_BLOB_NAME, JSON.stringify(index, null, 2));
-  setCachedData(TIMELINE_INDEX_BLOB_NAME, index, TIMELINE_INDEX_CACHE_TTL);
+  writeLocalFile(TIMELINE_INDEX_FILE_NAME, JSON.stringify(index, null, 2));
+  setCachedData(TIMELINE_INDEX_FILE_NAME, index, TIMELINE_INDEX_CACHE_TTL);
 }
 
 /**
@@ -306,15 +264,15 @@ async function storeTimelineIndex(index: TimelineIndex): Promise<void> {
  */
 async function getTimelineIndex(): Promise<TimelineIndex | null> {
   // Check cache first
-  const cached = getCachedData<TimelineIndex>(TIMELINE_INDEX_BLOB_NAME);
+  const cached = getCachedData<TimelineIndex>(TIMELINE_INDEX_FILE_NAME);
   if (cached) return cached;
 
-  const data = await safeGetBlob(TIMELINE_INDEX_BLOB_NAME);
+  const data = readLocalFile(TIMELINE_INDEX_FILE_NAME);
   if (!data) return null;
 
   try {
     const index: TimelineIndex = JSON.parse(data);
-    setCachedData(TIMELINE_INDEX_BLOB_NAME, index, TIMELINE_INDEX_CACHE_TTL);
+    setCachedData(TIMELINE_INDEX_FILE_NAME, index, TIMELINE_INDEX_CACHE_TTL);
     return index;
   } catch (error) {
     console.error('Error parsing timeline index:', error);
@@ -326,27 +284,27 @@ async function getTimelineIndex(): Promise<TimelineIndex | null> {
  * Store timeline partition
  */
 async function storeTimelinePartition(partitionId: number, partition: TimelinePartition): Promise<void> {
-  const blobName = `data-timeline-entries-${partitionId}.json`;
-  await safePutBlob(blobName, JSON.stringify(partition, null, 2));
-  setCachedData(blobName, partition, TIMELINE_PARTITION_CACHE_TTL);
+  const fileName = `data-timeline-entries-${partitionId}.json`;
+  writeLocalFile(fileName, JSON.stringify(partition, null, 2));
+  setCachedData(fileName, partition, TIMELINE_PARTITION_CACHE_TTL);
 }
 
 /**
  * Get timeline partition with caching
  */
 export async function getTimelinePartition(partitionId: number): Promise<TimelinePartition | null> {
-  const blobName = `data-timeline-entries-${partitionId}.json`;
+  const fileName = `data-timeline-entries-${partitionId}.json`;
 
   // Check cache first
-  const cached = getCachedData<TimelinePartition>(blobName);
+  const cached = getCachedData<TimelinePartition>(fileName);
   if (cached) return cached;
 
-  const data = await safeGetBlob(blobName);
+  const data = readLocalFile(fileName);
   if (!data) return null;
 
   try {
     const partition: TimelinePartition = JSON.parse(data);
-    setCachedData(blobName, partition, TIMELINE_PARTITION_CACHE_TTL);
+    setCachedData(fileName, partition, TIMELINE_PARTITION_CACHE_TTL);
     return partition;
   } catch (error) {
     console.error(`Error parsing partition ${partitionId}:`, error);
@@ -480,20 +438,20 @@ export async function getTimelineRange(fromBlock: number, toBlock: number): Prom
 }
 
 // ============================================================================
-// MIGRATION FROM LEGACY BLOB
+// MIGRATION FROM LEGACY FILE
 // ============================================================================
 
 /**
  * Get legacy voting power data
  */
-async function getLegacyBlob(): Promise<VotingPowerData | null> {
-  const data = await safeGetBlob(LEGACY_BLOB_NAME);
+async function getLegacyData(): Promise<VotingPowerData | null> {
+  const data = readLocalFile(LEGACY_BLOB_NAME);
   if (!data) return null;
 
   try {
     return JSON.parse(data) as VotingPowerData;
   } catch (error) {
-    console.error('Error parsing legacy blob:', error);
+    console.error('Error parsing legacy data:', error);
     return null;
   }
 }
@@ -510,7 +468,7 @@ function calculateTotalVotingPower(delegators: Record<string, string>): string {
 }
 
 /**
- * Migrate from legacy blob to new multi-file structure
+ * Migrate from legacy file to new multi-file structure
  */
 export async function migrateFromLegacyBlob(): Promise<boolean> {
   console.log('Checking for migration...');
@@ -522,8 +480,8 @@ export async function migrateFromLegacyBlob(): Promise<boolean> {
     return true;
   }
 
-  // Check for legacy blob
-  const legacyData = await getLegacyBlob();
+  // Check for legacy data
+  const legacyData = await getLegacyData();
   if (!legacyData) {
     console.log('No legacy data found, will initialize fresh on first sync');
     return false;
@@ -640,14 +598,14 @@ export async function getVotingPowerData(): Promise<VotingPowerData | null> {
  * Update sync progress
  */
 export async function updateSyncProgress(progress: SyncProgress): Promise<void> {
-  await safePutBlob(PROGRESS_BLOB_NAME, JSON.stringify(progress));
+  writeLocalFile(PROGRESS_FILE_NAME, JSON.stringify(progress));
 }
 
 /**
  * Get sync progress
  */
 export async function getSyncProgress(): Promise<SyncProgress | null> {
-  const data = await safeGetBlob(PROGRESS_BLOB_NAME);
+  const data = readLocalFile(PROGRESS_FILE_NAME);
   if (!data) return null;
 
   try {
@@ -662,59 +620,16 @@ export async function getSyncProgress(): Promise<SyncProgress | null> {
  * Clear sync progress
  */
 export async function clearSyncProgress(): Promise<void> {
-  if (USE_LOCAL_STORAGE) {
-    try {
-      const filePath = join(LOCAL_DATA_DIR, PROGRESS_BLOB_NAME);
-      if (existsSync(filePath)) {
-        unlinkSync(filePath);
-      }
-    } catch (error) {
-      console.error('Error clearing sync progress:', error);
-    }
-  } else {
-    try {
-      await del(PROGRESS_BLOB_NAME);
-    } catch (error: any) {
-      // Ignore 404 errors
-      if (error.status !== 404 && error.statusCode !== 404) {
-        console.error('Error clearing sync progress:', error);
-      }
-    }
+  try {
+    deleteLocalFile(PROGRESS_FILE_NAME);
+  } catch (error) {
+    console.error('Error clearing sync progress:', error);
   }
 }
 
 // ============================================================================
 // TIMELINE TRUNCATION
 // ============================================================================
-
-/**
- * Delete a blob/file
- */
-async function safeDeleteBlob(blobName: string): Promise<boolean> {
-  if (USE_LOCAL_STORAGE) {
-    try {
-      const filePath = join(LOCAL_DATA_DIR, blobName);
-      if (existsSync(filePath)) {
-        unlinkSync(filePath);
-      }
-      return true;
-    } catch (error) {
-      console.error(`Error deleting local file ${blobName}:`, error);
-      return false;
-    }
-  } else {
-    try {
-      await del(blobName);
-      return true;
-    } catch (error: any) {
-      if (error.status !== 404 && error.statusCode !== 404) {
-        console.error(`Error deleting blob ${blobName}:`, error);
-        return false;
-      }
-      return true; // Already deleted
-    }
-  }
-}
 
 /**
  * Truncate timeline data after a specific block number
@@ -783,8 +698,8 @@ export async function truncateTimelineAfterBlock(maxBlock: number): Promise<{
 
   // Delete orphaned partitions
   for (const partition of partitionsToDelete) {
-    const blobName = `data-timeline-entries-${partition.id}.json`;
-    await safeDeleteBlob(blobName);
+    const fileName = `data-timeline-entries-${partition.id}.json`;
+    deleteLocalFile(fileName);
     entriesRemoved += partition.entryCount;
     partitionsRemoved++;
     console.log(`[Truncate] Deleted partition ${partition.id} (${partition.entryCount} entries)`);
