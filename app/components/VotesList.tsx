@@ -9,19 +9,19 @@ interface VotesListProps {
 
 type SortColumn = 'voteTimestamp' | 'votingPower' | 'delegatorCount';
 
-// Source display names and colors
+// Source display names and colors (matching TimelineChart)
 const SOURCE_CONFIG: Record<VoteSource, { label: string; color: string }> = {
   'snapshot': {
     label: 'Snapshot',
-    color: 'text-orange-500',
+    color: '#f97316', // orange
   },
   'onchain-core': {
     label: 'Arbitrum Core',
-    color: 'text-blue-500',
+    color: '#3b82f6', // blue
   },
   'onchain-treasury': {
     label: 'Arbitrum Treasury',
-    color: 'text-green-500',
+    color: '#22c55e', // green
   },
 };
 
@@ -35,7 +35,6 @@ const ONCHAIN_CHOICES: Record<number, { label: string; color: string }> = {
 export default function VotesList({ votes }: VotesListProps) {
   const [sortColumn, setSortColumn] = useState<SortColumn>('voteTimestamp');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-  const [expandedReasons, setExpandedReasons] = useState<Set<string>>(new Set());
 
   // Sort votes
   const sortedVotes = useMemo(() => {
@@ -173,16 +172,6 @@ export default function VotesList({ votes }: VotesListProps) {
     }
   };
 
-  const toggleReason = (proposalId: string) => {
-    const newExpanded = new Set(expandedReasons);
-    if (newExpanded.has(proposalId)) {
-      newExpanded.delete(proposalId);
-    } else {
-      newExpanded.add(proposalId);
-    }
-    setExpandedReasons(newExpanded);
-  };
-
   // Convert URLs in text to clickable links
   const renderTextWithLinks = (text: string) => {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -190,15 +179,17 @@ export default function VotesList({ votes }: VotesListProps) {
 
     return parts.map((part, index) => {
       if (part.match(urlRegex)) {
+        // Use "Discourse" as link text for forum links
+        const linkText = part.includes('forum.arbitrum') ? 'Discourse' : part;
         return (
           <a
             key={index}
             href={part}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 dark:text-blue-400 hover:underline break-all"
+            className="text-blue-600 dark:text-blue-400 hover:underline"
           >
-            {part}
+            {linkText}
           </a>
         );
       }
@@ -249,13 +240,19 @@ export default function VotesList({ votes }: VotesListProps) {
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-900">
             <tr>
-              <th className="px-2 py-3">
+              <th className="px-1 py-3 w-4">
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <th className="pl-1 pr-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/4">
                 Proposal
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Vote
+              <th
+                className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-7/12 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+                onClick={() => handleSort('voteTimestamp')}
+              >
+                <div className="flex items-center">
+                  Vote
+                  <SortIcon column="voteTimestamp" />
+                </div>
               </th>
               <th
                 className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
@@ -266,24 +263,6 @@ export default function VotesList({ votes }: VotesListProps) {
                   <SortIcon column="votingPower" />
                 </div>
               </th>
-              <th
-                className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
-                onClick={() => handleSort('delegatorCount')}
-              >
-                <div className="flex items-center">
-                  Delegators
-                  <SortIcon column="delegatorCount" />
-                </div>
-              </th>
-              <th
-                className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
-                onClick={() => handleSort('voteTimestamp')}
-              >
-                <div className="flex items-center">
-                  Vote Date
-                  <SortIcon column="voteTimestamp" />
-                </div>
-              </th>
             </tr>
           </thead>
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -292,67 +271,56 @@ export default function VotesList({ votes }: VotesListProps) {
               const choiceInfo = formatChoice(vote);
               const delegatorCount = Object.keys(vote.delegatorBreakdown).length;
               const hasReason = vote.reason && vote.reason.trim().length > 0;
-              const isExpanded = expandedReasons.has(vote.proposalId);
               const reasonText = vote.reason || '';
-              const shouldTruncate = reasonText.length > 100;
 
               return (
                 <tr
                   key={`${vote.source}-${vote.proposalId}`}
                   className="hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
-                  <td className="px-2 py-4 whitespace-nowrap text-center">
-                    <span className={`${sourceConfig.color}`} title={sourceConfig.label}>
-                      ◆
-                    </span>
+                  <td className="px-1 py-4 whitespace-nowrap text-center">
+                    <span
+                      className="inline-block w-2 h-2 rotate-45"
+                      style={{
+                        backgroundColor: `${sourceConfig.color}80`,
+                        border: `1px solid ${sourceConfig.color}`
+                      }}
+                      title={sourceConfig.label}
+                    />
                   </td>
-                  <td className="px-4 py-4">
+                  <td className="pl-1 pr-4 py-4">
                     <a
                       href={getProposalUrl(vote)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-blue-600 dark:text-blue-400 hover:underline max-w-xs line-clamp-3"
+                      className="text-sm text-blue-600 dark:text-blue-400 hover:underline line-clamp-3"
                       title={vote.proposalTitle || vote.proposalId}
                     >
                       {vote.proposalTitle || `Proposal ${vote.proposalId.slice(0, 8)}...`}
                     </a>
                   </td>
                   <td className="px-4 py-4">
-                    <div className="max-w-xs">
+                    <div>
                       <span className={`text-sm font-medium ${choiceInfo.color} ${choiceInfo.multiline ? 'whitespace-pre-line' : ''}`}>
                         {choiceInfo.label}
                       </span>
                       {hasReason && (
-                        <>
-                          <p className={`text-sm text-gray-700 dark:text-gray-300 mt-1 ${!isExpanded && shouldTruncate ? 'line-clamp-2' : ''}`}>
-                            {renderTextWithLinks(reasonText)}
-                          </p>
-                          {shouldTruncate && (
-                            <button
-                              onClick={() => toggleReason(vote.proposalId)}
-                              className="text-xs text-blue-600 dark:text-blue-400 hover:underline mt-1"
-                            >
-                              {isExpanded ? 'Show less' : 'Show more'}
-                            </button>
-                          )}
-                        </>
+                        <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
+                          {renderTextWithLinks(reasonText)}
+                        </p>
                       )}
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        on {formatDate(vote.voteTimestamp)}
+                      </p>
                     </div>
                   </td>
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  <td className="px-4 py-4">
+                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                       {formatVotingPower(vote.votingPower)} ARB
-                    </span>
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    <span className="text-sm text-gray-900 dark:text-gray-100">
-                      {delegatorCount}
-                    </span>
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">
-                      {formatDate(vote.voteTimestamp)}
-                    </span>
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      from {delegatorCount} delegator{delegatorCount !== 1 ? 's' : ''}
+                    </div>
                   </td>
                 </tr>
               );
