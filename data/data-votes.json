@@ -10,6 +10,12 @@
       "choice": 2,
       "reason": "love AAVE and the ACI, but will be voting **Against** since this extension, at this time, is unfair to the other LTIPP recipients and overrides the detox proposal if it passes.\n\nhttps://forum.arbitrum.foundation/t/rfc-aave-dao-ltipp-grant-extension-request/26612/12?u=paulofonseca",
       "proposalTitle": "[Aave DAO] LTIPP Grant Extension Request",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000000000000000000"
       }
@@ -24,6 +30,13 @@
       "choice": 2,
       "reason": "we need to curb ARB inflation. https://forum.arbitrum.foundation/t/constitutional-aip-proposal-to-adopt-timeboost-a-new-transaction-ordering-policy/25167/54",
       "proposalTitle": "Constitutional AIP: Proposal to adopt Timeboost, a new transaction ordering policy ",
+      "proposalType": "single-choice",
+      "proposalChoices": [
+        "Collect bids in ETH to treasury",
+        "Collect bids in ARB and burn",
+        "Decline to adopt Timeboost",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000000000000000000"
       }
@@ -44,6 +57,14 @@
       ],
       "reason": "this feels like extortion. we should procure new service providers for this. https://forum.arbitrum.foundation/t/non-constitutional-terms-of-tenure-for-step-program-manager/26675/23",
       "proposalTitle": "Terms of Tenure for STEP program manager",
+      "proposalType": "ranked-choice",
+      "proposalChoices": [
+        "6 months from available funds",
+        "Additional funds for one year ",
+        "Liquidation of RWAs and STEP",
+        "New election at $86,581 per year",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000000000000000000"
       }
@@ -66,6 +87,16 @@
       ],
       "reason": "I believe the GovHack proposal to be a much better option for the DAO right now and also because the voting methodology chosen for this vote (Ranked Choice Voting / IRV) is not suitable for this type of decision.\nhttps://forum.arbitrum.foundation/t/arbitrum-offsite-format-online-vs-irl/26629/46?u=paulofonseca",
       "proposalTitle": "ArbitrumDAO Off-site",
+      "proposalType": "ranked-choice",
+      "proposalChoices": [
+        "IRL/conference/scholarships",
+        "IRL/conference/no scholarships",
+        "IRL/separate/scholarships",
+        "IRL/separate/no scholarships",
+        "Online event",
+        "Drop idea and do nothing",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000000000000000000"
       }
@@ -95,6 +126,12 @@
       "choice": 1,
       "reason": "Govhack is one of the most innovative initiatives in Ethereum and we should keep funding innovation at Arbitrum DAO. Also, Hack Humanity has shown several times that they have all the skills and the track record to pull off great events for Arbitrum DAO. https://forum.arbitrum.foundation/t/govhack-devcon-in-bangkok-hack-humanity/26634/35?u=paulofonseca",
       "proposalTitle": "GovHack Devcon in Bangkok - Hack Humanity",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000000000000000000"
       }
@@ -109,6 +146,12 @@
       "choice": 2,
       "reason": "I believe this Arbitrum Foundation proposal, for this amount of money, should require much more transparency and discussion than what happened up until now. There was a 30 minute, non-recorded, re-scheduled call where some Arbitrum Foundation members were not able to justify this particular amount, requested at this particular moment. The Arbitrum DAO should have a much higher bar to release this amount of funds. https://forum.arbitrum.foundation/t/non-constitutional-funds-to-bolster-foundation-s-strategic-partnerships-budget/26775/65?u=paulofonseca",
       "proposalTitle": "[Non-Constitutional] Funds to Bolster Foundation’s Strategic Partnerships Budget",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000000000000000000"
       }
@@ -123,6 +166,13 @@
       "choice": 1,
       "reason": "This is one of the most experimental and innovative delegate incentive programs I've seen. And I think it's worth trying it out. https://forum.arbitrum.foundation/t/proposal-delegate-incentive-program-dip/26496/78?u=paulofonseca",
       "proposalTitle": "[Non-Constitutional] Arbitrum DAO Delegate Incentive Program",
+      "proposalType": "single-choice",
+      "proposalChoices": [
+        "FOR - DIP V1.5",
+        "FOR - DIP V1.1",
+        "ABSTAIN",
+        "AGAINST"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000000000000000000"
       }
@@ -152,6 +202,12 @@
       "choice": 1,
       "reason": "I’ve always had a hard time trusting self-labelled alchemists to be honest =)\nhttps://forum.arbitrum.foundation/t/aip-whitelist-infura-nova-validator/25083/14?u=paulofonseca",
       "proposalTitle": "[Non-Constitutional] Whitelist Infura Nova Validator",
+      "proposalType": "single-choice",
+      "proposalChoices": [
+        "Whitelist Infura Validator",
+        "Don't whitelist Infura Validator",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000000000000000000"
       }
@@ -181,6 +237,12 @@
       "choice": 2,
       "reason": "we shouldn't treat Discord open channels data as public data, since it isn't public data. I would maybe agree with this proposal if it only used Discourse forum data, which can be argued that it is public, and also if all the analysis and dashboards would be shared with the broad community and submitted under CC0 license. https://forum.arbitrum.foundation/t/research-on-context-and-retention/26807/50",
       "proposalTitle": "Research on context and retention",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000000000000000000"
       }
@@ -195,6 +257,13 @@
       "choice": 2,
       "reason": "this information should be under the control of the DAO not the Arbitrum Foundation. the other option of using \"ENS txt records\" would update the ENS arbitrumfoundation.eth which is not even the name of our DAO, which is \"Arbitrum DAO\". Our Arbitrum DAO is not the ENS name arbitrumfoundation.eth, it is the set of onchain governor contracts that control our protocol and network, so that's what should be updated to hold this information. Also, my vote is conditional to the fact that we should use as few dependencies as possible for the *members* and *proposals* dynamic URIs, so that the onchain representation of the DAO is not relying on private companies APIs, especially for publicly available onchain governance data.\nhttps://forum.arbitrum.foundation/t/an-eip-4824-powered-daouri-for-arbitrum-dao/26386/27",
       "proposalTitle": "An EIP-4824 powered daoURI for Arbitrum DAO",
+      "proposalType": "single-choice",
+      "proposalChoices": [
+        "For – Use ENS txt records",
+        "For – Use registration contract",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000000000000000000"
       }
@@ -326,6 +395,17 @@
       ],
       "reason": "I think we should return this money to the DAO.\nhttps://forum.arbitrum.foundation/t/ltipp-retroactive-community-funding/26903/41?u=paulofonseca",
       "proposalTitle": "LTIPP Retroactive Community Funding Selections",
+      "proposalType": "approval",
+      "proposalChoices": [
+        "Powerhouse",
+        "cp0x",
+        "Lampros Labs DAO",
+        "Origin Protocol",
+        "Tokenguard",
+        "Serious People",
+        "Do not fund",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -342,6 +422,12 @@
       "choice": 2,
       "reason": "I think the $1.5M USD annual budget is too short, the event strategy was not decided in a bottoms-up way by the DAO, and because the Arbitrum Foundation already has their own events budget that they spend at their own discretion which is roughly 10 times this amount so they should not have a say in this committee as to which events should be funded.\nhttps://forum.arbitrum.foundation/t/establishing-a-dao-events-budget-for-2025/26734/43?u=paulofonseca",
       "proposalTitle": "Establishing a DAO Events Budget for 2025",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -360,6 +446,14 @@
       },
       "reason": "I feel there is not enough pull from the DAO to justify this committee and the consequent high investment, especially given the history of the previous committee in the past 6 months.\nhttps://forum.arbitrum.foundation/t/non-constitutional-arbitrum-research-and-development-collective-term-2/26922/54?u=paulofonseca",
       "proposalTitle": "(V2) Arbitrum Research & Development Collective",
+      "proposalType": "weighted",
+      "proposalChoices": [
+        "Funded with 1.73M USDC + Council",
+        "Funded with 2.09M USDC + Council",
+        "Funded with 2.60M USDC + Council",
+        "Abstain",
+        "Do not fund the ARDC"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "0",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -376,6 +470,12 @@
       "choice": 1,
       "reason": "it is an innovative token swap mechanic and it will send a message of commitment to the protocols selected.\nhttps://forum.arbitrum.foundation/t/non-constitutional-arbitrum-token-swap-pilot-program/27106/54?u=paulofonseca",
       "proposalTitle": "[Non-Constitutional] Arbitrum Token Swap Pilot Program",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "0",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -392,6 +492,12 @@
       "choice": 2,
       "reason": "to my knowledge, Tim has not contributed to Arbitrum DAO before and I believe the GCP should have selected someone with more context about our DAO.\nhttps://forum.arbitrum.foundation/t/reconfirmation-of-gcp-council-appointees/27142/29?u=paulofonseca",
       "proposalTitle": "GCP Council Re-Confirmation Vote for Tim Chang",
+      "proposalType": "single-choice",
+      "proposalChoices": [
+        "Reconfirm Tim Chang to GCPC",
+        "Don't confirm Tim Chang to GCPC",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "0",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -408,6 +514,12 @@
       "choice": 1,
       "reason": "John has enough context about Arbitrum DAO and gaming to be effective in this new role.\nhttps://forum.arbitrum.foundation/t/reconfirmation-of-gcp-council-appointees/27142/30?u=paulofonseca",
       "proposalTitle": "GCP Council Re-Confirmation Vote for John Kennedy",
+      "proposalType": "single-choice",
+      "proposalChoices": [
+        "Reconfirm John Kennedy to GCPC",
+        "Don't confirm John Kennedy",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "0",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -458,6 +570,12 @@
       "choice": 2,
       "reason": "I think this proposal needs to abide by the constitutional level of quorum (5% and not 3% as proposed) since it’s going to be a constitutional proposal in the end of its trial period. I believe it needs to have 5% of quorum participation so that it is able to enforce the consequences outlined for the delegates that don’t follow this CoC during the trial period, otherwise the trial period would not be really testing the implementation of this proposal. Also, I don’t agree with the assumption that elections should have shielded votes, since that was not the outcome of the previous temperature check vote on that matter. In general I agree we should have a CoC for Delegates like this one, but I feel that this one is not enough since it doesn’t enforce a strict voting policy for delegates that have disclosed or obvious conflicts of interest.\n\nhttps://forum.arbitrum.foundation/t/non-constitutional-arbitrum-dao-delegate-code-of-conduct-formalizing-the-daos-operations/27188/65?u=paulofonseca",
       "proposalTitle": "Adopt a Delegate Code of Conduct & Formalize Operations",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -474,6 +592,12 @@
       "choice": 1,
       "reason": "I feel that this is something the DAO can experiment with at this point.\n\nhttps://forum.arbitrum.foundation/t/non-constitutional-treasury-management-v1-2/26967/72?u=paulofonseca",
       "proposalTitle": "[Non-Constitutional] Treasury Management v1.2 ",
+      "proposalType": "single-choice",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -490,6 +614,12 @@
       "choice": 1,
       "reason": "Arbitrum is family, Arbitrum is home, Arbitrum is freedom, Arbitrum is you, and we should all take care of each other and support those that have been short changed.\n\nhttps://forum.arbitrum.foundation/t/proposal-for-financial-restitution-for-arbitrumdao-grant-winners/27020/61?u=paulofonseca",
       "proposalTitle": "Restitution For Extensively Delayed ArbitrumDAO Minigrant Winners",
+      "proposalType": "single-choice",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -506,6 +636,13 @@
       "choice": 3,
       "reason": "the amounts on the proposal don't add up, the $60,780 USD cost is not justified in detail, and in general it just feels like this proposal has too much \"fat\" since only ~58% of the amount Arbitrum would pay would go to the grantees and the remaining ~42% is basically \"administrative\" costs of this program.\n\nhttps://forum.arbitrum.foundation/t/hackathon-continuation-program/27492/63?u=paulofonseca",
       "proposalTitle": "Hackathon Continuation Program",
+      "proposalType": "single-choice",
+      "proposalChoices": [
+        "In favour, yes onchain mechanism",
+        "In favour, no onchain mechanism",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -522,6 +659,13 @@
       "choice": 2,
       "reason": "I believe we should invest in User Research and do even more than what this proposal aims to do.\nhttps://forum.arbitrum.foundation/t/non-consitutional-user-research-why-do-people-even-build-on-arbitrum-anyway/27608/75?u=paulofonseca",
       "proposalTitle": "[Non-consitutional] User Research: Why build on Arbitrum?",
+      "proposalType": "single-choice",
+      "proposalChoices": [
+        "Researching within Arbitrum only",
+        "Arbitrum + 2 others (SOL + OP)",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "1000113998019463198",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -538,6 +682,13 @@
       "choice": 3,
       "reason": "this version of the proposal is not the one that the proposer wants to put forward anymore.\nhttps://forum.arbitrum.foundation/t/designing-and-operating-the-reporting-and-information-function/27609/47?u=paulofonseca",
       "proposalTitle": "Designing and operating the reporting and information function",
+      "proposalType": "single-choice",
+      "proposalChoices": [
+        "For, More Salary - no bonusa",
+        "For: Less Salary - more bonus",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "1000113998019463198",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -554,6 +705,13 @@
       "choice": 2,
       "reason": "this grant program is one of the most important mechanisms that the DAO has to onboard new contributors, builders, and projects into Arbitrum.\nhttps://forum.arbitrum.foundation/t/non-constitutional-rfc-arbitrum-d-a-o-domain-allocator-offerings-grant-program-season-3/27584/63?u=paulofonseca",
       "proposalTitle": "Arbitrum D.A.O. Domain Allocator Offerings) Grant Program  - Season 3",
+      "proposalType": "single-choice",
+      "proposalChoices": [
+        "Renew with 4 domains",
+        "Renew with 5 domains (adding Orb",
+        "Abstain",
+        "Against"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "1000113998019463198",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -570,6 +728,12 @@
       "choice": 3,
       "reason": "I feel the protocols should pay for this, not the DAO, or at least they should match a little bit of the payment to ensure they are aligned.\nhttps://forum.arbitrum.foundation/t/non-constitutional-arbitrum-onboarding-v2-a-governance-bootcamp/27546/78?u=paulofonseca",
       "proposalTitle": "[NON-CONSTITUTIONAL] Arbitrum Onboarding V2: A Governance Bootcamp",
+      "proposalType": "single-choice",
+      "proposalChoices": [
+        "For",
+        "Abstain",
+        "Against"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "1000113998019463198",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -590,6 +754,17 @@
         "7": 20
       },
       "proposalTitle": "ARDC (V2) Supervisory Council Election",
+      "proposalType": "weighted",
+      "proposalChoices": [
+        "Frisson (Comm Role)",
+        "JuanRah + AlexLumley (Comm Role)",
+        "Jameskbh (Comm Role)",
+        "Entropy Adv. + Tamara (Op Role) ",
+        "Pedro Breuer (Comm Role) ",
+        "Violet Benson (Comm Role) ",
+        "ZER8 (Comm Role) ",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "1000113998019463198",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -608,6 +783,16 @@
         "4": 80
       },
       "proposalTitle": "ARDC (V2) Research Election",
+      "proposalType": "weighted",
+      "proposalChoices": [
+        "Revelo Intel",
+        "PYOR Research",
+        "The Block Research",
+        "Llama Research & Castle Capital",
+        "Blockworks Advisory",
+        "Messari",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "1000113998019463198",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -625,6 +810,15 @@
         "5": 100
       },
       "proposalTitle": "ARDC (V2) Risk Election",
+      "proposalType": "weighted",
+      "proposalChoices": [
+        "Vending Machine",
+        "TAU Labs",
+        "Jupiter Block",
+        "DeFiSafety",
+        "Nethermind",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "1000113998019463198",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -642,6 +836,12 @@
         "2": 100
       },
       "proposalTitle": "ARDC (V2) Security Election",
+      "proposalType": "weighted",
+      "proposalChoices": [
+        "OpenZeppelin",
+        "Trail of Bits",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "1000113998019463198",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -692,6 +892,12 @@
       "choice": 2,
       "reason": "this new purpose statement feels much less ethereum-aligned than what it was previously, and since the current constitution of the Arbitrum DAO mentions explicitly that this DAO should be ethereum-aligned, I can’t vote for a purpose statement that erodes that enshrined value. The previous purpose of **Scale Ethereum without compromise** feels much more aligned to me than this new one to **defend and guide the Arbitrum ecosystem**.\n\nhttps://forum.arbitrum.foundation/t/unifying-arbitrum-s-mission-vision-purpose-mvp/27275/67?u=paulofonseca\n",
       "proposalTitle": "Unifying Arbitrum’s Mission, Vision, Purpose (MVP)",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "1000000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -708,6 +914,13 @@
       "choice": 1,
       "reason": "the proposer has incorporated most of the feedback from delegates and this team has a proven track record of delivering value for Arbitrum for a while now.\n\nhttps://forum.arbitrum.foundation/t/partner-with-eth-bucharest-2025-eastern-europe-s-leading-ethereum-conference-and-hackathon/27606/83?u=paulofonseca",
       "proposalTitle": "Partner with ETH Bucharest 2025",
+      "proposalType": "single-choice",
+      "proposalChoices": [
+        "FOR, with POAP - $69,300",
+        "FOR, without POAP - $55,800",
+        "Abstain",
+        "Against"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "1000000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -724,6 +937,12 @@
       "choice": 2,
       "reason": "we should experiment with this setup in a much smaller amount at first, otherwise we are setting this up for failure.\nhttps://forum.arbitrum.foundation/t/opco-a-dao-adjacent-entity-for-strategy-execution/27361/94?u=paulofonseca",
       "proposalTitle": "OpCo – A DAO-adjacent Entity for Strategy Execution",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "1000000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -759,6 +978,12 @@
       "choice": 1,
       "reason": "this program is very well set up and thought through, and the entities involved are some of the best in the world at what they do.\n\nhttps://forum.arbitrum.foundation/t/non-constitutional-stable-treasury-endowment-program-2-0/26819/62?u=paulofonseca",
       "proposalTitle": "Non-Constitutional: Stable Treasury Endowment Program 2.0",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "999694570051356040",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -778,6 +1003,16 @@
         "6": 1
       },
       "proposalTitle": "Arbitrum D.A.O. Season 3 Elections - New Protocols and Ideas",
+      "proposalType": "weighted",
+      "proposalChoices": [
+        "Gabriel",
+        "Saurabh",
+        "Euphoria",
+        "TodayInDeFi",
+        "CastleCapital",
+        "Uhthred",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000233979364441789",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -797,6 +1032,14 @@
         "1": 1
       },
       "proposalTitle": "Arbitrum D.A.O. Season 3 Elections - Education, Community Growth, and Events",
+      "proposalType": "weighted",
+      "proposalChoices": [
+        "SEEDGov",
+        "FruteroClub",
+        "saas",
+        "ArbitrumHub.io",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000233979364441789",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -816,6 +1059,13 @@
         "4": 1
       },
       "proposalTitle": "Arbitrum D.A.O. Season 3 Elections - Dev Tooling on One and Stylus",
+      "proposalType": "weighted",
+      "proposalChoices": [
+        "Juandi",
+        "ariutokintumi",
+        "andreiv",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000233979364441789",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -835,6 +1085,12 @@
         "1": 1
       },
       "proposalTitle": "Arbitrum D.A.O. Season 3 Elections - Gaming",
+      "proposalType": "weighted",
+      "proposalChoices": [
+        "Flook",
+        "Erezedor",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000233979364441789",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -853,6 +1109,12 @@
       "choice": 1,
       "reason": "I've been begging Entropy since October to publish this proposal once and for all. There has been misuse of funds in this DAO, and this proposal should incentivize people to look for those and report them. For example, I just recently [found a $10k USD worth](https://forum.arbitrum.foundation/t/questbook-dda-program-report/27859/14?u=paulofonseca) of misused funds that were reverted to the DAO after my report. We should all do more of that.\n\nhttps://forum.arbitrum.foundation/t/the-watchdog-arbitrum-daos-grant-misuse-bounty-program/27978/46?u=paulofonseca",
       "proposalTitle": "The Watchdog: Arbitrum DAO's Grant Misuse Bounty Program",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000233979364441789",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -870,6 +1132,13 @@
       "voteTimestamp": 1738239033,
       "choice": 4,
       "proposalTitle": "Proposal for Piloting Enhancements and Strengthening the Sustainability of ArbitrumHub in the Year Ahead",
+      "proposalType": "single-choice",
+      "proposalChoices": [
+        "For with retroactive",
+        "For without retroactive",
+        "Abstain",
+        "Against"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000000000000000001",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -889,6 +1158,12 @@
       "choice": 1,
       "reason": "I think it is always helpful for a DAO to try to formalize objectives (despite most of the time the effort being a waste of time for everybody involved) and this proposal puts forward a good overall methodology to do that in a DAO context. However, I don't like the fact that @Entropy would also be submitting their own submission to their own framework, since it breaks the neutrality of the intent of authoring and pushing this SOS proposal forward. So I would recommend for Entropy to be the very last one to submit their proposal, so as not to dissuade participation from other participants. \n\nhttps://forum.arbitrum.foundation/t/arbitrum-strategic-objective-setting-sos-defining-the-dao-s-interim-goals/28102/66?u=paulofonseca",
       "proposalTitle": "Arbitrum Strategic Objective Setting (SOS) – Defining the DAO’s Interim Goals",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000000000000000001",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -954,6 +1229,12 @@
       "choice": 1,
       "reason": "it makes no sense to leave this much ETH, getting stale, in the L1 timelock.\n\nhttps://forum.arbitrum.foundation/t/aip-timeboost-nova-fee-sweep/28247/5?u=paulofonseca",
       "proposalTitle": "Approve the Nova Fee Sweep Action",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000000000000000001",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -999,6 +1280,12 @@
       "choice": 2,
       "reason": "this is not the right way to do this. This proposal was rushed, the proposer didn't incorporate feedback from the delegates, and I overall don't agree with increasing the budget to almost double, without opening applications for other projects to apply as well. As I recommended before, we should invest heavily in stylus, and the right move, in my opinion, is to double down on the program and make a second season of it, with maybe even more budget than the first. But doing it like this is not okay.\n\nhttps://forum.arbitrum.foundation/t/request-to-increase-the-stylus-sprint-committee-s-budget/28312/73?u=paulofonseca",
       "proposalTitle": "Request to Increase the Stylus Sprint Committee's Budget",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000000000000000001",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -1021,6 +1308,12 @@
       "choice": 1,
       "reason": "the monetary ask is not that big for the return this can have, the DAO needs regular events like this to attract good and honest founders into Arbitrum, the Farstar team is competent and has done this before at the highest level, and the timeline proposed seems doable. Also, I believe the Events Budget 2025 is exactly the avenue that should fund this type of proposal, and as a reminder for my fellow distinguished delegates that are worried about spending the Events Budget 2025, I would like to remind them that that budget and committee was funded through onchain vote more than 3 months ago, with $1.5M USD in total to be spend, and at the moment it has only spent $55,800 USD for ETH Bucharest 2025. Which means that, excluding the $400K USD that were already reserved for the Arbitrum Foundation this year and that are going to be used fully for ETH Denver in the next couple weeks, in the last quarter, the DAO has only spend 5.05% of this annual events budget ($1.5M in total - $400K for the AF = $1.1M remaining and therefore the $55.8K allocated to ETH Bucharest is 5.05% of 1.1M). And I’m not arguing that we should be voting For in every proposal that comes to the DAO trying to get funded through that budget, but I believe we should be more worried about the fact that almost no service provider comes forward and tries to propose an event or series of events that use that budget. That was the original intention of the 2025 Events Budget, and at this rate, is not being fulfilled at all.\n\nhttps://forum.arbitrum.foundation/t/arbitrum-growth-circles-event-proposal/28375/46?u=paulofonseca",
       "proposalTitle": "Arbitrum Growth Circles Event Proposal",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000295741058890957",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -1068,6 +1361,12 @@
       "choice": 3,
       "reason": "I have no idea of the risks this upgrade will entail without seeing the results of an independent audit to the smart contract code. And I also think the governance process for this proposal has not been followed in the best way it could. I think the Arbitrum DAO delegates should be asked to vote, even on a temperature check, in as much of a fully fleshed out proposal, as possible. This proposal is not ready to be voted on by delegates, in my opinion, in the sense that if delegates vote against in this temp check, will the work on this upgrade stop? No, it won’t. So I don’t understand why delegates are being asked to vote on this proposal, at this point. After the code is complete and the audits are done, then it makes sense for delegates to decide on the risk vs. reward of upgrading the Arbitrum One and Nova contracts, with this proposal.\n\nhttps://forum.arbitrum.foundation/t/constitutional-aip-arbos-version-40-callisto/28436/30?u=paulofonseca",
       "proposalTitle": "[CONSTITUTIONAL] AIP: ArbOS Version 40 Callisto",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000295741058890957",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -1091,6 +1390,12 @@
       "choice": 2,
       "reason": "I don’t agree with internalizing into the Arbitrum Foundation, a job that the DAO was previously doing. Even when the service providers doing that job for the DAO were taking too long, wasting resources, denying audit subsidies to worthy projects, porting the whole program to competing ecosystems, etc. I don’t condone the way the ADPC acted in their past 2 terms, but I also don’t think internalizing this job into the Foundation is the right approach. What I think we need is an Arbitrum DAO run, dedicated Audit Subsidy program, that would run continuously and would report their actions to the DAO with the utmost transparency possible. And executed by new and fresh service providers that are exclusive to Arbitrum.\n\nhttps://forum.arbitrum.foundation/t/arbitrum-audit-program/28368/73?u=paulofonseca",
       "proposalTitle": "Arbitrum Audit Program",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000295741058890957",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -1120,6 +1425,14 @@
       ],
       "reason": "I don’t agree with the chosen methodology to get consent from the DAO to decide this. As pointed out previously, the non-inclusion of other strategies in this recommendation is weird, merging everything in the same vote is weird, choosing to use ranked choice voting at the last minute is weird. Just too weird overall really.\n\nhttps://forum.arbitrum.foundation/t/tmc-s-proposed-allocations/28522/64?u=paulofonseca",
       "proposalTitle": "TMC Recommendation",
+      "proposalType": "ranked-choice",
+      "proposalChoices": [
+        "#1 Deploy Both Strategies",
+        "#2 Only Deploy ARB Strategy",
+        "#3 Only Deploy Stable Strategy",
+        "#4 Deploy Nothing",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000000000000000001",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -1215,6 +1528,12 @@
       "choice": 1,
       "reason": "we should at least do something with this money.\n\nhttps://forum.arbitrum.foundation/t/gmcs-preferred-choices-for-7-500-eth-rfp/28524/57?u=paulofonseca",
       "proposalTitle": "GMC's Preferred Allocations (7,500 ETH)",
+      "proposalType": "single-choice",
+      "proposalChoices": [
+        "For, Deploy Capital",
+        "Against, Do not Deploy Capital",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000000000000000001",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -1238,6 +1557,12 @@
       "choice": 1,
       "reason": "this will help bring more liquidity into Arbitrum.\n\nhttps://forum.arbitrum.foundation/t/constitutional-proposal-for-arbitrum-dao-to-register-the-sky-custom-gateway-contracts-in-the-router/28617/61?u=paulofonseca",
       "proposalTitle": "[CONSTITUTIONAL] Proposal: For Arbitrum DAO to register the Sky Custom Gateway contracts in the Router",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000000000000000001",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -1261,6 +1586,12 @@
       "choice": 1,
       "reason": "I think this proposal, in it's current form, is safe to try. @kamilgorski has been super responsive here on the forum, showing up on calls, timing the move of the proposal to a vote to cater to the DAO, incorporating almost all feedback on the proposal, honestly doing everything correctly, from my point of view, including being super detailed about the costs, etc... so I still don't understand why this proposal is being voted down by the DAO at this offchain temperature check stage. I think this is safe to try, and we need a user acquisition program for the dApps and protocols in Arbitrum so it might as well be this one from the Patterns team.\n\nhttps://forum.arbitrum.foundation/t/non-constitutional-rfc-arb-incentives-user-acquisition-for-dapps-protocols/28291/103?u=paulofonseca",
       "proposalTitle": "[Non-constitutional] ARB Incentives: User Acquisition for dApps & Protocols",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -1286,6 +1617,21 @@
         "12": 1
       },
       "proposalTitle": "OpCo – Oversight and Transparency Committee (OAT) Elections",
+      "proposalType": "weighted",
+      "proposalChoices": [
+        "A.J. Warner (ajwarner90)",
+        "Belmin Kalkan (0xRecruiter)",
+        "Chris Cameron (PaperImperium)",
+        "Edgar Prediger (EzR3aL)",
+        "Federico Daffina (Federico)",
+        "Frisson (Frisson)",
+        "Jana Bertram (Janabe)",
+        "Joseph Schiarizzi (cupojoseph)",
+        "Marc Zeller (MarcZeller)",
+        "Patrick McCorry (stonecoldpat)",
+        "Paul Imseih (Pablo)",
+        "Pedro Breuer (pedrob)"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -1310,6 +1656,12 @@
       "choice": 1,
       "reason": "despite not being a good time to sell even more ARB, we should have, as a DAO, a stablecoin strategy that generates yield. Also, the selected partners are competent and experienced.\n\nhttps://forum.arbitrum.foundation/t/tmc-proposed-allocations-v2-stablecoin-strategy/28786/26?u=paulofonseca",
       "proposalTitle": "TMC Stablecoin Recommendation",
+      "proposalType": "single-choice",
+      "proposalChoices": [
+        "YES, Deploy Stablecoin Strategy",
+        "NO, Deploy Nothing",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -1334,6 +1686,12 @@
       "choice": 1,
       "reason": "if we don't deploy, we are just going to hold 10M ARB and do nothing with it and wait... so in mind mind, we might as well just deploy it and trust the partners to return a yield to the DAO. The selected partners are competent, and I think they have the opportunity to do a good job for Arbitrum DAO.\n\nhttps://forum.arbitrum.foundation/t/tmc-proposed-allocations-v2-arb-strategy/28785/22?u=paulofonseca",
       "proposalTitle": "TMC ARB Recommendation",
+      "proposalType": "single-choice",
+      "proposalChoices": [
+        "YES, Deploy ARB Strategy",
+        "NO, Deploy Nothing",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -1358,6 +1716,12 @@
       "choice": 1,
       "reason": "I like rubber stamping things that were already decided and contribute to achieving an imaginary quorum of 130,752,756.914717982009274266 ARB as of the ETH block 22375620 at the timestamp of the start of this offchain vote.\n\nhttps://forum.arbitrum.foundation/t/step-2-committee-preferred-allocations/29086/21?u=paulofonseca",
       "proposalTitle": "Approval of STEP 2 Committee's Preferred Allocations",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -1382,6 +1746,13 @@
       "choice": 2,
       "reason": "I like rubber stamping things that didn’t actually need to happen and contribute to achieving an imaginary quorum of 130,752,756.914717982009274266 ARB as of the ETH block 22375793 at the timestamp of the start of this offchain vote.\n\nhttps://forum.arbitrum.foundation/t/proposal-non-consitutional-top-up-for-hackathon-continuation-program/29064/48?u=paulofonseca",
       "proposalTitle": "[Non-consitutional]: Top-up for Hackathon Continuation Program",
+      "proposalType": "single-choice",
+      "proposalChoices": [
+        "Only top-up the HCP",
+        "Yes to both",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -1457,6 +1828,12 @@
       "choice": 2,
       "reason": "I feel that it is irresponsible to approve an incentive program of this size where @Entropy has such a major role on, without first having clarity around the future collaboration parameters between Entropy and Arbitrum DAO.\n\nhttps://forum.arbitrum.foundation/t/defi-renaissance-incentive-program-drip/29049/69?u=paulofonseca",
       "proposalTitle": "DeFi Renaissance Incentive Program (DRIP)",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -1482,6 +1859,12 @@
       "choice": 2,
       "reason": "I believe quorum thresholds should not be changed with the argument of \"to make it easy to pass proposals\". That is admitting defeat and not addressing the underlying problems. Also, this change is not big enough to make a difference, it only buys us a few weeks. It is becoming more and more of a risk for the DAO to have a treasury with ETH and an ever decreasing governance participation and the price of $ARB going down. With this change, we are getting more and more into a very dangerous territory, of being the target for a governance attack.\n\n\nhttps://forum.arbitrum.foundation/t/constitutional-aip-constitutional-quorum-threshold-reduction/29145/50?u=paulofonseca",
       "proposalTitle": "[Constitutional] AIP: Constitutional Quorum Threshold Reduction",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "9864181000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -1507,6 +1890,13 @@
       "choice": 1,
       "reason": "between the available voting options, I think Event Horizon should retain much more voting power than 100K ARB. This proposal should have been posted with several voting options for voting power, between 0 and 7M ARB. I would personally prefer for Event Horizon to retain 500K or even 1M ARB in voting power. As pointed out earlier, we should be delegating more ARB out of the treasury to actors that always cast a vote, not less ARB. Event Horizon is a worthwhile governance experiment, in many ways, and I think we should support it meaningfully, not with just 100K ARB.\n\nhttps://forum.arbitrum.foundation/t/rfc-proposal-to-adjust-the-voting-power-of-the-arbitrum-community-pool-ratifying-the-agentic-governance-pivot/29280/21?u=paulofonseca",
       "proposalTitle": "Adjust the Voting Power of the Arbitrum Community Pool & Ratify the Agentic Governance Pivot",
+      "proposalType": "single-choice",
+      "proposalChoices": [
+        "A - Do nothing",
+        "B - Reduce delegation to 100K",
+        "C - Reduce delegation to 0",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -1532,6 +1922,12 @@
       "choice": 2,
       "reason": "the DAO should retain the control over releasing funds, not the Arbitrum Foundation.\n\nhttps://forum.arbitrum.foundation/t/wind-down-the-mss-transfer-payment-responsibilities-to-the-arbitrum-foundation/29279/18?u=paulofonseca",
       "proposalTitle": "Wind Down the MSS + Transfer Payment Responsibilities to the Arbitrum Foundation",
+      "proposalType": "single-choice",
+      "proposalChoices": [
+        "For: Wind Down the MSS",
+        "Against: Continue with the MSS",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -1557,6 +1953,12 @@
       "choice": 1,
       "reason": "in my opinion this vote needs to reach a 3% non-constitutional quorum to be a legitimate DAO decision, and it makes total sense to do it.\n\nhttps://forum.arbitrum.foundation/t/reallocate-redeemed-usdm-funds-to-step-2-budget/29335/31?u=paulofonseca",
       "proposalTitle": "Reallocate Redeemed USDM Funds to STEP 2 Budget",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -1609,6 +2011,12 @@
       "choice": 2,
       "reason": "this is a clear power overreach that the DAO should not tolerate.\nhttps://forum.arbitrum.foundation/t/updating-the-opco-foundation-s-operational-capability/29388/23?u=paulofonseca\n",
       "proposalTitle": "Updating the OpCo Foundation’s Operational Capability",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "1000000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -1635,6 +2043,12 @@
       "choice": 3,
       "reason": "thank you for voting!",
       "proposalTitle": "Let’s improve our governance forum with three proposals.app feature integrations",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "1000000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -1661,6 +2075,12 @@
       "choice": 1,
       "reason": "this will bring more accountability and less overhead.\n\nhttps://forum.arbitrum.foundation/t/arbitrum-treasury-management-council-consolidating-efforts/29334/40?u=paulofonseca",
       "proposalTitle": "Arbitrum Treasury Management Council - Consolidating Efforts",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "1000000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -1687,6 +2107,12 @@
       "choice": 1,
       "reason": "it doesn't make sense to continue to subsidize or even maintain Arbitrum Nova. We should focus only on Arbitrum One, aka, Arbitrum.\n\nhttps://forum.arbitrum.foundation/t/constitutional-aip-remove-cost-cap-on-arbitrum-nova/29332/33?u=paulofonseca",
       "proposalTitle": "[Constitutional] AIP: Remove Cost Cap on Arbitrum Nova",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "1000000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -1767,6 +2193,12 @@
       "choice": 2,
       "reason": "this is too much money for the value it brings.",
       "proposalTitle": "Entropy Advisors: Exclusively Working with the Arbitrum DAO, Year 2 and Year 3",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "1000000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -1793,6 +2225,12 @@
       "choice": 3,
       "reason": "I haven't had the time to review this properly.",
       "proposalTitle": "[Constitutional] AIP: Update the Upgrade Executors",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "1000000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -1819,6 +2257,12 @@
       "choice": 1,
       "reason": "we need a simpler process for this kind of thing",
       "proposalTitle": "[CONSTITUTIONAL] Register $BORING in the Arbitrum generic-custom gateway",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "1000000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -1845,6 +2289,12 @@
       "choice": 2,
       "reason": "I don't agree with removing the Responsible Voting Policy and the inclusion of policing language about how contributors can't publicly talk about conflicts in the DAO.",
       "proposalTitle": "Updating the Code of Conduct & DAO’s Procedures",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "1000000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -1871,6 +2321,12 @@
       "choice": 1,
       "reason": "its creating confusion right now.",
       "proposalTitle": "[Constitutional] AIP: Disable Legacy Tether Bridge",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "1000000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -1897,6 +2353,12 @@
       "choice": 1,
       "reason": "it makes sense to put this money to use. ",
       "proposalTitle": "Consolidate Idle USDC to the ATMC’s Stablecoin Balance",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "1000000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -1950,6 +2412,12 @@
       "choice": 2,
       "reason": "this new version will, every month, distribute $55k in rewards to delegates on average, and cost $27.5k to run. this is roughly a 50% overhead on admin which clearly shows that the proposed design of this program is not fit for purpose. we should design a way better program that runs with way less overhead and subjectivity.\n\nhttps://forum.arbitrum.foundation/t/proposal-updates-to-the-dip-the-complete-1-7-version/29635/26?u=paulofonseca",
       "proposalTitle": "[Non-Constitutional] - Updates to the DIP, The Complete 1.7 Version",
+      "proposalType": "single-choice",
+      "proposalChoices": [
+        "For: Upgrade to v1.7",
+        "Against: Keep v1.6",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000303988773036817",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -2031,6 +2499,12 @@
       "choice": 2,
       "reason": "there hasn't been enough discussion on this proposal... it's way too soon to bring it to a vote.",
       "proposalTitle": "[CONSTITUTIONAL] AIP: ArbOS Version 50 Dia",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "1000003988773036817",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -2063,6 +2537,13 @@
         4
       ],
       "proposalTitle": "Revert the Delegate Incentive Program (DIP) to Version 1.5",
+      "proposalType": "ranked-choice",
+      "proposalChoices": [
+        "Sunset the DIP",
+        "Revert the DIP to v1.5",
+        "Keep the current version",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "99999999997992500720",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -2093,6 +2574,15 @@
       ],
       "reason": "don't agree with any measure that makes it easy to become a Security Council member or entrenches their power for longer, and I think candidates should apply with a safe enough key from the get go.",
       "proposalTitle": "[CONSTITUTIONAL] AIP: Security Council Election Process Improvements",
+      "proposalType": "approval",
+      "proposalChoices": [
+        "Increase cohort duration",
+        "Reduce qualification threshold",
+        "Allow members to bypass Nominee",
+        "Allow candidates to rotate keys",
+        "Allow members to rotate keys",
+        "None"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "99999999997992500720",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -2121,6 +2611,12 @@
       "choice": 2,
       "reason": "past yield is not enough to justify this much money being put outside the control of tokenholders.",
       "proposalTitle": "Transfer 8,500 ETH from the Treasury to ATMC’s ETH Treasury Strategies",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "1000000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -2149,6 +2645,12 @@
       "choice": 2,
       "reason": "we need to research the governance security implications of this change way more seriously. ",
       "proposalTitle": "[Constitutional] AIP: DVP Quorum",
+      "proposalType": "single-choice",
+      "proposalChoices": [
+        "For DVP Quorum",
+        "Against DVP Quorum",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -2177,6 +2679,12 @@
       "choice": 1,
       "reason": "it will allow to attract better candidates in the next elections for this council.",
       "proposalTitle": "AGV Council Compensation Calibration: Benchmark for Future Council Terms",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -2205,6 +2713,12 @@
       "choice": 3,
       "reason": "I wrote this proposal",
       "proposalTitle": "[Temperature Check] Should we try a Delegate Incentive Program like the Arbitrum Triple Dip?",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -2262,6 +2776,12 @@
       "choice": 2,
       "reason": "a delegate incentive program like the Arbitrum Triple Dip, collaboratively designed by the community, in the open, is the way to go. This proposal is the exact opposite of that.",
       "proposalTitle": "The DAO Incentive Program (DIP 2.0)",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "2957644000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -2290,6 +2810,12 @@
       "choice": 2,
       "reason": "I haven’t seen enough proof of results to justify this bonus",
       "proposalTitle": "AGV Council Compensation Calibration: Startup-Phase Bonus for Current Council Members",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -2320,6 +2846,12 @@
       "choice": 1,
       "reason": "this will improve the network",
       "proposalTitle": "AIP: Raise the gas target, min L2 base fee, & implement improvements to the pricing algorithm",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "100000000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -2350,6 +2882,12 @@
       "choice": 2,
       "reason": "this council is in dire need of properly legitimate elections, not reconfirmation votes.",
       "proposalTitle": "Tim Chang reconfirmation for AGV council",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "1000000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -2380,6 +2918,12 @@
       "choice": 2,
       "reason": "this council is in dire need of properly legitimate elections, not reconfirmation votes.",
       "proposalTitle": "John Kennedy reconfirmation for AGV council",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "1000000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -2411,6 +2955,15 @@
         "4": 1
       },
       "proposalTitle": "AGV - 2026 Council Elections",
+      "proposalType": "weighted",
+      "proposalChoices": [
+        "Greg Canessa",
+        "JoJo",
+        "David Bolger",
+        "Chris Cameron",
+        "Tekr0x",
+        "Coinflipcanada"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "1000000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
@@ -2441,6 +2994,12 @@
       "choice": 3,
       "reason": "I will receive rewards from this program if this proposal passes.",
       "proposalTitle": "Rewarding Active Delegates (RAD) Program",
+      "proposalType": "basic",
+      "proposalChoices": [
+        "For",
+        "Against",
+        "Abstain"
+      ],
       "delegatorBreakdown": {
         "0xe594469fde6ae29943a64f81d95c20f5f8eb2e04": "6666666000000000000000",
         "0x076ea7620320c69cefd8d58c582e36ff54683d0e": "52132495116633663629842",
