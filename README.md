@@ -1,59 +1,128 @@
-# Voting Power Tracker
+# DAO Delegate Dashboard
 
-A Next.js application that tracks ERC20Votes delegation power for ARB token on Arbitrum network. The app displays historical voting power changes in a stacked timeline chart and shows current delegator balances.
+A Next.js application that tracks ERC20Votes delegation power and voting history for DAO delegates. Supports multiple EVM chains and integrates with Snapshot.org and Tally.xyz for governance proposals.
 
 ## Features
 
 - Track voting power delegation over time
 - Visualize delegation changes with a stacked timeline chart
 - View current delegators and their balances
-- Automatic sync with Arbitrum blockchain using free RPC endpoints
+- Track votes on Snapshot.org proposals
+- Track votes on on-chain governor proposals (Tally)
+- Multi-chain support (Arbitrum, Optimism, Base, Polygon, and more)
+- Automatic sync with blockchain using free RPC endpoints
 - Data stored in Vercel Blob Storage
 
-## Setup
+## Quick Start for New Delegates
 
-1. Install dependencies:
+1. **Clone and install:**
 ```bash
+git clone <repo-url>
+cd paulofi
 npm install
 ```
 
-2. Configure the app by editing `config.json`:
+2. **Configure `config.json`:**
 ```json
 {
-  "delegateAddress": "0x...",  // Your target delegate address
-  "tokenAddress": "0x912CE59144191C1204E64559FE8253a0e49E6548",  // ARB token
-  "chainId": 42161  // Arbitrum One
+  "_comment_endBlock": "endBlock: Specific block number, or use 'latest' to sync to current block",
+  "_comment_tallyDaoName": "tallyDaoName: DAO slug used in Tally URLs (e.g., 'arbitrum' for tally.xyz/gov/arbitrum/...)",
+
+  "delegateAddress": "0xYOUR_DELEGATE_ADDRESS",
+  "tokenAddress": "0xTOKEN_CONTRACT_ADDRESS",
+  "chainId": 42161,
+  "chainName": "arbitrum",
+  "l1ChainName": "mainnet",
+  "startBlock": 248786699,
+  "endBlock": "latest",
+  "tallyDaoName": "arbitrum",
+  "snapshotSpace": "arbitrumfoundation.eth",
+  "governors": {
+    "core": "0xCORE_GOVERNOR_ADDRESS",
+    "treasury": "0xTREASURY_GOVERNOR_ADDRESS"
+  }
 }
 ```
 
-3. Set up environment variables in Vercel:
-   - `BLOB_READ_WRITE_TOKEN`: Get this from your Vercel dashboard under Blob Storage settings
+3. **Set up environment variables** (create `.env.local`):
+```bash
+BLOB_READ_WRITE_TOKEN=your_vercel_blob_token
+SYNC_SECRET=your_sync_secret
+```
 
-## Development
-
-Run the development server:
+4. **Run the development server:**
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+5. **Sync data** by visiting `http://localhost:3000` and clicking "Sync Data"
 
-## Deployment
+## Configuration Reference
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `delegateAddress` | Yes | The delegate address to track |
+| `tokenAddress` | Yes | The ERC20Votes token contract address |
+| `chainId` | Yes | Chain ID (e.g., 42161 for Arbitrum) |
+| `chainName` | Yes | Chain name for RPC client (see supported chains) |
+| `l1ChainName` | No | L1 chain for timestamp conversions (e.g., "mainnet" for Arbitrum) |
+| `startBlock` | Yes | Block number to start syncing from (token deployment) |
+| `endBlock` | Yes | Specific block number or `"latest"` to sync to current block |
+| `tallyDaoName` | No | DAO slug for Tally URLs (e.g., "arbitrum", "optimism", "uniswap") |
+| `snapshotSpace` | No | Snapshot.org space ID (e.g., "arbitrumfoundation.eth") |
+| `governors.core` | No | Core governor contract address |
+| `governors.treasury` | No | Treasury governor contract address |
+
+## Supported Chains
+
+- `arbitrum` (42161)
+- `mainnet` (1)
+- `optimism` (10)
+- `base` (8453)
+- `polygon` (137)
+- `avalanche` (43114)
+- `bsc` (56)
+- `gnosis` (100)
+
+## Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `BLOB_READ_WRITE_TOKEN` | Yes | Vercel Blob Storage token |
+| `SYNC_SECRET` | No | Secret for background sync API authentication |
+| `DRPC_RPC_URL` | No | Custom RPC endpoint (falls back to free public RPCs) |
+| `ARCHIVE_RPC_URL` | No | Archive node RPC for historical data |
+
+## Deployment to Vercel
 
 1. Push your code to GitHub
 2. Import the project in Vercel
-3. Add the `BLOB_READ_WRITE_TOKEN` environment variable
+3. Add environment variables in Vercel dashboard:
+   - `BLOB_READ_WRITE_TOKEN` (from Vercel Blob Storage)
+   - `SYNC_SECRET` (generate a random string)
 4. Deploy!
 
-## Usage
+## Syncing Data
 
-1. First, sync the data by clicking the "Sync Data" button. This will fetch all historical delegation events from the blockchain.
-2. The timeline chart will show voting power changes over time, with each delegator represented by a different color.
-3. The delegators list shows current delegators and their balances.
+### Initial Sync
+Click "Sync Data" on the dashboard to fetch all historical delegation events and votes.
+
+### Background Sync
+For production, set up a cron job to call the sync endpoints:
+
+```bash
+# Sync delegation events
+curl -X POST https://your-domain.vercel.app/api/sync/background \
+  -H "X-Sync-Token: your_sync_secret"
+
+# Sync votes
+curl -X POST https://your-domain.vercel.app/api/votes/sync \
+  -H "X-Sync-Token: your_sync_secret"
+```
 
 ## Technical Details
 
-- Uses free Arbitrum RPC endpoints (no API keys required)
+- Uses free public RPC endpoints (no API keys required)
 - Automatically falls back to multiple RPC endpoints if one fails
 - Processes events in chunks to handle rate limits
 - Stores processed data in Vercel Blob Storage for fast retrieval
@@ -64,5 +133,16 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 - **Backend**: Next.js API routes
 - **Blockchain**: Viem for Ethereum interactions
 - **Storage**: Vercel Blob Storage
-- **RPC**: Free Arbitrum public RPC endpoints
+- **Governance**: Snapshot.org GraphQL API + On-chain governor events
 
+## API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/sync` | POST | Sync delegation events (interactive) |
+| `/api/sync/background` | POST | Sync delegation events (background) |
+| `/api/votes/sync` | POST | Sync votes from Snapshot and governors |
+| `/api/cleanup` | POST | Truncate data after endBlock |
+| `/api/timeline` | GET | Get delegation timeline data |
+| `/api/votes` | GET | Get votes data |
+| `/api/config` | GET | Get public config values |
