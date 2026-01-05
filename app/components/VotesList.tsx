@@ -10,21 +10,18 @@ interface VotesListProps {
 type SortColumn = 'voteTimestamp' | 'votingPower' | 'delegatorCount';
 
 // Source display names and colors
-const SOURCE_CONFIG: Record<VoteSource, { label: string; color: string; bgColor: string }> = {
+const SOURCE_CONFIG: Record<VoteSource, { label: string; color: string }> = {
   'snapshot': {
     label: 'Snapshot',
-    color: 'text-orange-600 dark:text-orange-400',
-    bgColor: 'bg-orange-100 dark:bg-orange-900/30'
+    color: 'text-orange-500',
   },
   'onchain-core': {
     label: 'Arbitrum Core',
-    color: 'text-blue-600 dark:text-blue-400',
-    bgColor: 'bg-blue-100 dark:bg-blue-900/30'
+    color: 'text-blue-500',
   },
   'onchain-treasury': {
     label: 'Arbitrum Treasury',
-    color: 'text-green-600 dark:text-green-400',
-    bgColor: 'bg-green-100 dark:bg-green-900/30'
+    color: 'text-green-500',
   },
 };
 
@@ -122,6 +119,29 @@ export default function VotesList({ votes }: VotesListProps) {
     setExpandedReasons(newExpanded);
   };
 
+  // Convert URLs in text to clickable links
+  const renderTextWithLinks = (text: string) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = text.split(urlRegex);
+
+    return parts.map((part, index) => {
+      if (part.match(urlRegex)) {
+        return (
+          <a
+            key={index}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 dark:text-blue-400 hover:underline break-all"
+          >
+            {part}
+          </a>
+        );
+      }
+      return part;
+    });
+  };
+
   const SortIcon = ({ column }: { column: SortColumn }) => {
     if (sortColumn !== column) {
       return (
@@ -157,17 +177,13 @@ export default function VotesList({ votes }: VotesListProps) {
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-900">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Type
+              <th className="px-2 py-3">
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Proposal Title
+                Proposal
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Vote Choice
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Vote Reason
+                Vote
               </th>
               <th
                 className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
@@ -192,7 +208,7 @@ export default function VotesList({ votes }: VotesListProps) {
                 onClick={() => handleSort('voteTimestamp')}
               >
                 <div className="flex items-center">
-                  Date
+                  Vote Date
                   <SortIcon column="voteTimestamp" />
                 </div>
               </th>
@@ -213,9 +229,9 @@ export default function VotesList({ votes }: VotesListProps) {
                   key={`${vote.source}-${vote.proposalId}`}
                   className="hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${sourceConfig.bgColor} ${sourceConfig.color}`}>
-                      {sourceConfig.label}
+                  <td className="px-2 py-4 whitespace-nowrap text-center">
+                    <span className={`${sourceConfig.color}`} title={sourceConfig.label}>
+                      ◆
                     </span>
                   </td>
                   <td className="px-4 py-4">
@@ -223,29 +239,27 @@ export default function VotesList({ votes }: VotesListProps) {
                       {vote.proposalTitle || `Proposal ${vote.proposalId.slice(0, 8)}...`}
                     </div>
                   </td>
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    <span className={`text-sm font-medium ${choiceInfo.color}`}>
-                      {choiceInfo.label}
-                    </span>
-                  </td>
                   <td className="px-4 py-4">
-                    {hasReason ? (
-                      <div className="max-w-xs">
-                        <p className={`text-sm text-gray-700 dark:text-gray-300 ${!isExpanded && shouldTruncate ? 'line-clamp-2' : ''}`}>
-                          {reasonText}
-                        </p>
-                        {shouldTruncate && (
-                          <button
-                            onClick={() => toggleReason(vote.proposalId)}
-                            className="text-xs text-blue-600 dark:text-blue-400 hover:underline mt-1"
-                          >
-                            {isExpanded ? 'Show less' : 'Show more'}
-                          </button>
-                        )}
-                      </div>
-                    ) : (
-                      <span className="text-sm text-gray-400 dark:text-gray-500">-</span>
-                    )}
+                    <div className="max-w-xs">
+                      <span className={`text-sm font-medium ${choiceInfo.color}`}>
+                        {choiceInfo.label}
+                      </span>
+                      {hasReason && (
+                        <>
+                          <p className={`text-sm text-gray-700 dark:text-gray-300 mt-1 ${!isExpanded && shouldTruncate ? 'line-clamp-2' : ''}`}>
+                            {renderTextWithLinks(reasonText)}
+                          </p>
+                          {shouldTruncate && (
+                            <button
+                              onClick={() => toggleReason(vote.proposalId)}
+                              className="text-xs text-blue-600 dark:text-blue-400 hover:underline mt-1"
+                            >
+                              {isExpanded ? 'Show less' : 'Show more'}
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap">
                     <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
