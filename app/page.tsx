@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import TimelineChart from "./components/TimelineChart";
 import DelegatorsList from "./components/DelegatorsList";
+import VotesList from "./components/VotesList";
 import type {
   MetadataSchema,
   CurrentStateSchema,
@@ -469,6 +470,11 @@ export default function Home() {
                   No timeline data available.
                 </p>
               )}
+            </div>
+
+            {/* Votes List */}
+            <div className="mb-8">
+              <VotesList votes={votes} />
             </div>
 
             {/* Delegators List */}

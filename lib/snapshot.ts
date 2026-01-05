@@ -9,6 +9,7 @@ export interface SnapshotVote {
   voter: string;
   created: number;
   choice: number | number[];
+  reason: string;
   vp: number;
   proposal: {
     id: string;
@@ -53,6 +54,7 @@ export async function fetchSnapshotVotes(
           voter
           created
           choice
+          reason
           vp
           proposal {
             id

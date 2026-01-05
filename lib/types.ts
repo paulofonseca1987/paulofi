@@ -21,6 +21,7 @@ export interface VoteEntry {
   voteTimestamp: number;            // when vote was cast
   voteBlockNumber?: number;
   choice: number | number[];
+  reason?: string;                  // vote reason/rationale
   proposalTitle?: string;
   delegatorBreakdown: Record<string, string>;  // from timeline at snapshot
 }
