@@ -34,7 +34,7 @@ const ONCHAIN_CHOICES: Record<number, { label: string; color: string }> = {
 
 export default function VotesList({ votes }: VotesListProps) {
   const [sortColumn, setSortColumn] = useState<SortColumn>('voteTimestamp');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   // Sort votes
   const sortedVotes = useMemo(() => {
