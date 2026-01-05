@@ -234,6 +234,10 @@ export default function TimelineChart({
 
   const delegatorList = Array.from(delegatorAddresses);
 
+  // Calculate responsive tooltip width based on container width
+  const isMobile = containerWidth < 640;
+  const tooltipWidth = isMobile ? Math.min(containerWidth - 24, 352) : 352;
+
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       // Check if this is a vote point
@@ -257,7 +261,7 @@ export default function TimelineChart({
         const title = vote.proposalTitle || sourceLabels[vote.source];
 
         return (
-          <div className="bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg w-[352px]">
+          <div className="bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg" style={{ width: tooltipWidth }}>
             <div className="flex items-center gap-2 mb-2 h-12">
               <span
                 className="inline-block w-2 h-2 rotate-45 flex-shrink-0"
@@ -362,7 +366,7 @@ export default function TimelineChart({
       );
 
       return (
-        <div className="bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg w-[352px]">
+        <div className="bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg" style={{ width: tooltipWidth }}>
           <p className="font-semibold mb-2 dark:text-white">
             {currentPoint.date}
           </p>
@@ -559,8 +563,8 @@ export default function TimelineChart({
           />
           <Tooltip
             content={<CustomTooltip />}
-            position={{ x: 34, y: 20 }}
-            wrapperStyle={{ pointerEvents: 'none', marginLeft: 12 }}
+            position={isMobile ? { x: 12, y: 20 } : { x: 34, y: 20 }}
+            wrapperStyle={{ pointerEvents: 'none', marginLeft: isMobile ? 0 : 12 }}
           />
           {delegatorList.map((addr, idx) => (
             <Area
