@@ -306,12 +306,51 @@ export default function Home() {
   return (
     <main className="min-h-screen p-8 bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold dark:text-white">
-            paulofonseca.eth Arbitrum DAO Voting Power
-          </h1>
+        {/* Hero Section */}
+        <div className="mb-8 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl shadow-lg p-8 text-white">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div className="flex-1">
+              <h1 className="text-3xl md:text-4xl font-bold mb-3">
+                10% Delegatoooor Kickback Program
+              </h1>
+              <p className="text-blue-100 text-lg mb-4 max-w-2xl">
+                An experiment in DAO governance alignment: Paulo Fonseca pledges to share 10% of all
+                Arbitrum DAO earnings with the token holders who delegate to him.
+              </p>
+              <div className="flex items-center gap-2 text-sm text-blue-200">
+                <span className="font-mono bg-white/10 px-3 py-1 rounded-full">
+                  paulofonseca.eth
+                </span>
+                <span className="text-blue-300">•</span>
+                <span>Arbitrum DAO Delegate</span>
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <a
+                href="https://forum.arbitrum.foundation/t/paulo-fonseca-10-delegatoooor-kickback-program/28271"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center px-5 py-2.5 bg-white/10 hover:bg-white/20 border border-white/30 rounded-lg font-medium transition-colors"
+              >
+                Read Proposal
+                <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </a>
+              <a
+                href="https://www.tally.xyz/gov/arbitrum/delegate/paulofonseca.eth"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center px-5 py-2.5 bg-white text-blue-700 hover:bg-blue-50 rounded-lg font-semibold transition-colors"
+              >
+                Delegate Now
+                <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </a>
+            </div>
+          </div>
         </div>
-
 
         {/* Sync Progress Visualization */}
         {syncProgress && syncProgress.isActive && (
