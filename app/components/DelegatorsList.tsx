@@ -352,7 +352,7 @@ export default function DelegatorsList({ delegators, timeline, rewardShares, fun
                 </div>
               </th>
               {fundsWalletData && (
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[180px]">
                   Share Value
                 </th>
               )}
@@ -432,7 +432,7 @@ export default function DelegatorsList({ delegators, timeline, rewardShares, fun
                           {info.rewardPercentage.toFixed(2)}%
                         </span>
                       </div>
-                      <div className="w-48 bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-1">
+                      <div className="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-1">
                         <div
                           className="bg-green-600 h-2 rounded-full"
                           style={{ width: `${Math.min(info.rewardPercentage, 100)}%` }}
@@ -444,7 +444,7 @@ export default function DelegatorsList({ delegators, timeline, rewardShares, fun
                   )}
                 </td>
                 {fundsWalletData && (
-                  <td className="px-6 py-4 text-right">
+                  <td className="px-6 py-4 text-right min-w-[180px]">
                     {(() => {
                       const shareValue = calculateShareValue(info.rewardPercentage);
                       if (!shareValue) {
