@@ -11,6 +11,7 @@ import type {
   SyncProgress,
   VoteEntry,
   VotesMetadata,
+  FundsWalletData,
 } from "@/lib/types";
 import { calculateDelegatorRewardShares } from "@/lib/rewardCalculation";
 
@@ -34,6 +35,7 @@ export default function Home() {
   const [delegateAddress, setDelegateAddress] = useState<string | null>(null);
   const [tallyDaoName, setTallyDaoName] = useState<string>('arbitrum');
   const [snapshotSpace, setSnapshotSpace] = useState<string>('arbitrumfoundation.eth');
+  const [fundsWalletData, setFundsWalletData] = useState<FundsWalletData | null>(null);
 
   // Calculate reward shares from votes data
   const rewardShares = useMemo(() => {
@@ -87,11 +89,12 @@ export default function Home() {
       }
       setTimelineLoading(false);
 
-      // Load votes data
+      // Load votes data and funds wallet data
       try {
-        const [votesRes, votesMetaRes] = await Promise.all([
+        const [votesRes, votesMetaRes, fundsWalletRes] = await Promise.all([
           fetch("/api/votes?endpoint=votes"),
           fetch("/api/votes?endpoint=metadata"),
+          fetch("/api/funds-wallet"),
         ]);
 
         if (votesRes.ok) {
@@ -103,8 +106,13 @@ export default function Home() {
           const votesMeta = await votesMetaRes.json();
           setVotesMetadata(votesMeta);
         }
+
+        if (fundsWalletRes.ok) {
+          const fundsData = await fundsWalletRes.json();
+          setFundsWalletData(fundsData);
+        }
       } catch (err) {
-        console.warn("Failed to fetch votes:", err);
+        console.warn("Failed to fetch votes or funds wallet:", err);
       }
     } catch (err: any) {
       setError(err.message || "Failed to load data");
@@ -482,6 +490,7 @@ export default function Home() {
                 delegators={currentState.delegators}
                 timeline={timeline}
                 rewardShares={rewardShares}
+                fundsWalletData={fundsWalletData}
               />
             </div>
 

@@ -159,4 +159,38 @@ function validateConfig(config: Config): void {
       throw new Error('Config validation error: governors.treasury must be a valid Ethereum address');
     }
   }
+
+  // Optional fundsWallet validation
+  if (config.fundsWallet) {
+    if (!addressRegex.test(config.fundsWallet.address)) {
+      throw new Error('Config validation error: fundsWallet.address must be a valid Ethereum address');
+    }
+    if (!config.fundsWallet.chainPrefix || typeof config.fundsWallet.chainPrefix !== 'string') {
+      throw new Error('Config validation error: fundsWallet.chainPrefix is required');
+    }
+    if (!config.fundsWallet.chainId || typeof config.fundsWallet.chainId !== 'number') {
+      throw new Error('Config validation error: fundsWallet.chainId must be a number');
+    }
+  }
+
+  // Optional fundsWalletTokens validation
+  if (config.fundsWalletTokens) {
+    if (!Array.isArray(config.fundsWalletTokens)) {
+      throw new Error('Config validation error: fundsWalletTokens must be an array');
+    }
+    for (const token of config.fundsWalletTokens) {
+      if (!addressRegex.test(token.address)) {
+        throw new Error(`Config validation error: fundsWalletTokens token address ${token.address} is invalid`);
+      }
+      if (!token.symbol || typeof token.symbol !== 'string') {
+        throw new Error('Config validation error: fundsWalletTokens token symbol is required');
+      }
+      if (typeof token.decimals !== 'number' || token.decimals < 0) {
+        throw new Error('Config validation error: fundsWalletTokens token decimals must be a non-negative number');
+      }
+      if (!token.coingeckoId || typeof token.coingeckoId !== 'string') {
+        throw new Error('Config validation error: fundsWalletTokens token coingeckoId is required');
+      }
+    }
+  }
 }
