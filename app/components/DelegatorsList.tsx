@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import type { TimelineEntry, DelegatorRewardShare } from '@/lib/types';
+import type { TimelineEntry, DelegatorRewardShare, FundsWalletData } from '@/lib/types';
 
 interface DelegatorsListProps {
   delegators: Record<string, string>;
   timeline: TimelineEntry[];
   rewardShares?: Record<string, DelegatorRewardShare>;
+  fundsWalletData?: FundsWalletData | null;
 }
 
 interface DelegatorInfo {
@@ -19,7 +20,7 @@ interface DelegatorInfo {
   rewardPercentage: number;
 }
 
-export default function DelegatorsList({ delegators, timeline, rewardShares }: DelegatorsListProps) {
+export default function DelegatorsList({ delegators, timeline, rewardShares, fundsWalletData }: DelegatorsListProps) {
   const [sortColumn, setSortColumn] = useState<'dateStart' | 'currentBalance' | 'rewardPercentage'>('rewardPercentage');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
@@ -172,6 +173,46 @@ export default function DelegatorsList({ delegators, timeline, rewardShares }: D
     return (Number(balance) / Number(totalBalance)) * 100;
   };
 
+  // Calculate share value for a delegator based on their reward percentage
+  const calculateShareValue = (rewardPercentage: number) => {
+    if (!fundsWalletData || rewardPercentage <= 0) return null;
+
+    const shareRatio = rewardPercentage / 100;
+    const totalUsdValue = fundsWalletData.totalUsdValue * shareRatio;
+
+    const tokenBreakdown = fundsWalletData.tokens.map((token) => {
+      // Parse the balance and multiply by share ratio
+      const fullBalance = Number(token.balanceRaw) / Math.pow(10, token.symbol === 'USDC' ? 6 : 18);
+      const shareAmount = fullBalance * shareRatio;
+
+      return {
+        symbol: token.symbol,
+        amount: shareAmount,
+      };
+    });
+
+    return {
+      totalUsdValue,
+      tokenBreakdown,
+    };
+  };
+
+  const formatUsdValue = (value: number) => {
+    return value.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
+
+  const formatTokenAmount = (amount: number, symbol: string) => {
+    // Use fewer decimals for stablecoins
+    const decimals = symbol === 'USDC' || symbol === 'USDT' || symbol === 'DAI' ? 2 : 2;
+    return amount.toLocaleString(undefined, {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: decimals,
+    });
+  };
+
   const handleSort = (column: 'dateStart' | 'currentBalance' | 'rewardPercentage') => {
     if (sortColumn === column) {
       // Toggle direction if same column
@@ -194,19 +235,41 @@ export default function DelegatorsList({ delegators, timeline, rewardShares }: D
   };
 
   const downloadCSV = () => {
-    // CSV header
-    const headers = ['address', 'delegation_start_date', 'voting_power_at_endBlock', 'vote_count', 'reward_percentage'];
+    // CSV header - include share value columns if funds wallet data is available
+    const baseHeaders = ['address', 'delegation_start_date', 'voting_power_at_endBlock', 'vote_count', 'reward_percentage'];
+    const shareValueHeaders = fundsWalletData
+      ? ['share_value_usd', ...fundsWalletData.tokens.map((t) => `share_${t.symbol.toLowerCase()}`)]
+      : [];
+    const headers = [...baseHeaders, ...shareValueHeaders];
 
     // Build rows sorted by reward percentage descending
     const sortedEntries = [...delegatorEntries].sort((a, b) => b.rewardPercentage - a.rewardPercentage);
 
-    const rows = sortedEntries.map((info) => [
-      info.address,
-      formatDateForCSV(info.dateStart),
-      formatBalanceForCSV(info.currentBalance),
-      info.rewardVoteCount.toString(),
-      info.rewardPercentage.toFixed(8),
-    ]);
+    const rows = sortedEntries.map((info) => {
+      const baseRow = [
+        info.address,
+        formatDateForCSV(info.dateStart),
+        formatBalanceForCSV(info.currentBalance),
+        info.rewardVoteCount.toString(),
+        info.rewardPercentage.toFixed(8),
+      ];
+
+      // Add share value columns if funds wallet data is available
+      if (fundsWalletData) {
+        const shareValue = calculateShareValue(info.rewardPercentage);
+        if (shareValue) {
+          baseRow.push(shareValue.totalUsdValue.toFixed(2));
+          shareValue.tokenBreakdown.forEach((t) => {
+            baseRow.push(t.amount.toFixed(6));
+          });
+        } else {
+          baseRow.push('0');
+          fundsWalletData.tokens.forEach(() => baseRow.push('0'));
+        }
+      }
+
+      return baseRow;
+    });
 
     // Combine headers and rows
     const csvContent = [
@@ -288,6 +351,11 @@ export default function DelegatorsList({ delegators, timeline, rewardShares }: D
                   <SortIcon column="rewardPercentage" />
                 </div>
               </th>
+              {fundsWalletData && (
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[180px]">
+                  Share Value
+                </th>
+              )}
             </tr>
           </thead>
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -364,7 +432,7 @@ export default function DelegatorsList({ delegators, timeline, rewardShares }: D
                           {info.rewardPercentage.toFixed(2)}%
                         </span>
                       </div>
-                      <div className="w-48 bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-1">
+                      <div className="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-1">
                         <div
                           className="bg-green-600 h-2 rounded-full"
                           style={{ width: `${Math.min(info.rewardPercentage, 100)}%` }}
@@ -375,6 +443,28 @@ export default function DelegatorsList({ delegators, timeline, rewardShares }: D
                     <span className="text-sm text-gray-500 dark:text-gray-400">-</span>
                   )}
                 </td>
+                {fundsWalletData && (
+                  <td className="px-6 py-4 text-right min-w-[180px]">
+                    {(() => {
+                      const shareValue = calculateShareValue(info.rewardPercentage);
+                      if (!shareValue) {
+                        return <span className="text-sm text-gray-400">-</span>;
+                      }
+                      return (
+                        <div>
+                          <div className="font-semibold text-green-600 dark:text-green-400">
+                            ${formatUsdValue(shareValue.totalUsdValue)} USD
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                            {shareValue.tokenBreakdown
+                              .map((t) => `${formatTokenAmount(t.amount, t.symbol)} ${t.symbol}`)
+                              .join(' + ')}
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

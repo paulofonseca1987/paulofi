@@ -14,6 +14,25 @@
   "governors": {
     "core": "0xf07DeD9dC292157749B6Fd268E37DF6EA38395B9",
     "treasury": "0x789fC99093B09aD01C34DC7251D0C89ce743e5a4"
-  }
+  },
+  "fundsWallet": {
+    "address": "0x76E8Dd748c91D6b1Ac2feEB3cef40Db04aCF0eca",
+    "chainPrefix": "arb1",
+    "chainId": 42161
+  },
+  "fundsWalletTokens": [
+    {
+      "address": "0x912CE59144191C1204E64559FE8253a0e49E6548",
+      "symbol": "ARB",
+      "decimals": 18,
+      "coingeckoId": "arbitrum"
+    },
+    {
+      "address": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+      "symbol": "USDC",
+      "decimals": 6,
+      "coingeckoId": "usd-coin"
+    }
+  ]
 }
 
