@@ -1,3 +1,16 @@
+export interface FundsWalletConfig {
+  address: string;
+  chainPrefix: string;
+  chainId: number;
+}
+
+export interface FundsWalletTokenConfig {
+  address: string;
+  symbol: string;
+  decimals: number;
+  coingeckoId: string;
+}
+
 export interface Config {
   delegateAddress: string;
   tokenAddress: string;
@@ -12,6 +25,8 @@ export interface Config {
     core: string;
     treasury: string;
   };
+  fundsWallet?: FundsWalletConfig;
+  fundsWalletTokens?: FundsWalletTokenConfig[];
 }
 
 // Vote types
@@ -138,5 +153,28 @@ export interface VerificationResult {
   failed: number;
   timestamp: number;
   verifiedAtBlock: number;
+}
+
+// Funds wallet types
+export interface FundsWalletTokenData {
+  symbol: string;
+  balance: string;          // formatted balance (e.g., "50000")
+  balanceRaw: string;       // wei as string
+  usdPrice: number;
+  usdValue: number;
+}
+
+export interface FundsWalletData {
+  tokens: FundsWalletTokenData[];
+  totalUsdValue: number;
+  lastUpdated: number;      // timestamp
+}
+
+export interface DelegatorShareValue {
+  totalUsdValue: number;
+  tokenBreakdown: Array<{
+    symbol: string;
+    amount: string;
+  }>;
 }
 
