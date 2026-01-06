@@ -560,7 +560,7 @@ export default function Home() {
             <p>
               Built by{' '}
               <a
-                href="https://warpcast.com/paulofonseca.eth"
+                href="https://paulofonseca.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
